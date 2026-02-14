@@ -1,0 +1,89 @@
+# הקולה מרקט — Generative Engine Optimization Map
+
+> A מזון ומעדנייה business.
+
+---
+
+## Pages
+
+### בית
+https://-0d21fd2c.zappy5.app
+
+### אודות
+https://-0d21fd2c.zappy5.app/about
+
+### מזווה
+https://-0d21fd2c.zappy5.app/pantry
+
+### צור קשר
+https://-0d21fd2c.zappy5.app/contact
+
+### Products
+https://-0d21fd2c.zappy5.app/products
+המוצרים שלנו - הקולה מרקט
+
+### Cart
+https://-0d21fd2c.zappy5.app/cart
+עגלת הקניות שלך
+
+### Checkout
+https://-0d21fd2c.zappy5.app/checkout
+תשלום
+
+### Login
+https://-0d21fd2c.zappy5.app/login
+התחברות לקוחות
+
+### Account
+https://-0d21fd2c.zappy5.app/account
+החשבון שלי
+
+### Order Success
+https://-0d21fd2c.zappy5.app/order-success
+תודה על ההזמנה
+
+### Product Detail
+https://-0d21fd2c.zappy5.app/product/:slug
+פרטי המוצר - הקולה מרקט
+
+### Category
+https://-0d21fd2c.zappy5.app/category/:slug
+מוצרים - הקולה מרקט
+
+## Legal & Policy
+
+### Privacy Policy
+https://-0d21fd2c.zappy5.app/privacy
+Information about how user data is collected, stored, and protected.
+
+### Terms & Conditions
+https://-0d21fd2c.zappy5.app/terms
+Legal terms describing service usage, rights, and policies.
+
+### Accessibility Statement
+https://-0d21fd2c.zappy5.app/accessibility
+Information about WCAG compliance and accessibility features.
+
+---
+
+# Business Context (for LLM understanding)
+
+## About הקולה מרקט
+הקולה מרקט is a business in the מזון ומעדנייה industry.
+
+## Target Audience
+- חובבי אוכל גורמה
+- אנשי מקצוע עסוקים
+- אנשים מודעים לבריאות
+- חובבי קולינריה
+- מארגני אירועים
+
+## Industry
+מזון ומעדנייה
+
+---
+
+# Additional Resources
+
+- **Sitemap**: https://-0d21fd2c.zappy5.app/sitemap.xml
+- **Robots.txt**: https://-0d21fd2c.zappy5.app/robots.txt
