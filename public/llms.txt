@@ -1,89 +1,75 @@
-# הקולה מרקט — Generative Engine Optimization Map
-
-> A מזון ומעדנייה business.
+# Business — Generative Engine Optimization Map
 
 ---
 
 ## Pages
 
 ### בית
-https://-0d21fd2c.zappy5.app
+https://example.com
 
 ### אודות
-https://-0d21fd2c.zappy5.app/about
+https://example.com/about
 
 ### מזווה
-https://-0d21fd2c.zappy5.app/pantry
+https://example.com/pantry
 
 ### צור קשר
-https://-0d21fd2c.zappy5.app/contact
+https://example.com/contact
 
 ### Products
-https://-0d21fd2c.zappy5.app/products
+https://example.com/products
 המוצרים שלנו - הקולה מרקט
 
 ### Cart
-https://-0d21fd2c.zappy5.app/cart
+https://example.com/cart
 עגלת הקניות שלך
 
 ### Checkout
-https://-0d21fd2c.zappy5.app/checkout
+https://example.com/checkout
 תשלום
 
 ### Login
-https://-0d21fd2c.zappy5.app/login
+https://example.com/login
 התחברות לקוחות
 
 ### Account
-https://-0d21fd2c.zappy5.app/account
+https://example.com/account
 החשבון שלי
 
 ### Order Success
-https://-0d21fd2c.zappy5.app/order-success
+https://example.com/order-success
 תודה על ההזמנה
 
 ### Product Detail
-https://-0d21fd2c.zappy5.app/product/:slug
+https://example.com/product/:slug
 פרטי המוצר - הקולה מרקט
 
 ### Category
-https://-0d21fd2c.zappy5.app/category/:slug
+https://example.com/category/:slug
 מוצרים - הקולה מרקט
 
 ## Legal & Policy
 
 ### Privacy Policy
-https://-0d21fd2c.zappy5.app/privacy
+https://example.com/privacy
 Information about how user data is collected, stored, and protected.
 
 ### Terms & Conditions
-https://-0d21fd2c.zappy5.app/terms
+https://example.com/terms
 Legal terms describing service usage, rights, and policies.
 
 ### Accessibility Statement
-https://-0d21fd2c.zappy5.app/accessibility
+https://example.com/accessibility
 Information about WCAG compliance and accessibility features.
 
 ---
 
 # Business Context (for LLM understanding)
 
-## About הקולה מרקט
-הקולה מרקט is a business in the מזון ומעדנייה industry.
-
-## Target Audience
-- חובבי אוכל גורמה
-- אנשי מקצוע עסוקים
-- אנשים מודעים לבריאות
-- חובבי קולינריה
-- מארגני אירועים
-
-## Industry
-מזון ומעדנייה
-
+## About Business
 ---
 
 # Additional Resources
 
-- **Sitemap**: https://-0d21fd2c.zappy5.app/sitemap.xml
-- **Robots.txt**: https://-0d21fd2c.zappy5.app/robots.txt
+- **Sitemap**: https://example.com/sitemap.xml
+- **Robots.txt**: https://example.com/robots.txt
