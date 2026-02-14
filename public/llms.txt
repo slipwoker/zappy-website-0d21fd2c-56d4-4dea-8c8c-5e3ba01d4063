@@ -1,75 +1,89 @@
-# Business — Generative Engine Optimization Map
+# הקולה מרקט — Generative Engine Optimization Map
+
+> A מזון ומעדנייה business.
 
 ---
 
 ## Pages
 
 ### בית
-https://example.com
+https://hakola-market.zappy5.app
 
 ### אודות
-https://example.com/about
+https://hakola-market.zappy5.app/about
 
 ### מזווה
-https://example.com/pantry
+https://hakola-market.zappy5.app/pantry
 
 ### צור קשר
-https://example.com/contact
+https://hakola-market.zappy5.app/contact
 
 ### Products
-https://example.com/products
+https://hakola-market.zappy5.app/products
 המוצרים שלנו - הקולה מרקט
 
 ### Cart
-https://example.com/cart
+https://hakola-market.zappy5.app/cart
 עגלת הקניות שלך
 
 ### Checkout
-https://example.com/checkout
+https://hakola-market.zappy5.app/checkout
 תשלום
 
 ### Login
-https://example.com/login
+https://hakola-market.zappy5.app/login
 התחברות לקוחות
 
 ### Account
-https://example.com/account
+https://hakola-market.zappy5.app/account
 החשבון שלי
 
 ### Order Success
-https://example.com/order-success
+https://hakola-market.zappy5.app/order-success
 תודה על ההזמנה
 
 ### Product Detail
-https://example.com/product/:slug
+https://hakola-market.zappy5.app/product/:slug
 פרטי המוצר - הקולה מרקט
 
 ### Category
-https://example.com/category/:slug
+https://hakola-market.zappy5.app/category/:slug
 מוצרים - הקולה מרקט
 
 ## Legal & Policy
 
 ### Privacy Policy
-https://example.com/privacy
+https://hakola-market.zappy5.app/privacy
 Information about how user data is collected, stored, and protected.
 
 ### Terms & Conditions
-https://example.com/terms
+https://hakola-market.zappy5.app/terms
 Legal terms describing service usage, rights, and policies.
 
 ### Accessibility Statement
-https://example.com/accessibility
+https://hakola-market.zappy5.app/accessibility
 Information about WCAG compliance and accessibility features.
 
 ---
 
 # Business Context (for LLM understanding)
 
-## About Business
+## About הקולה מרקט
+הקולה מרקט is a business in the מזון ומעדנייה industry.
+
+## Target Audience
+- חובבי אוכל גורמה
+- אנשי מקצוע עסוקים
+- אנשים מודעים לבריאות
+- חובבי קולינריה
+- מארגני אירועים
+
+## Industry
+מזון ומעדנייה
+
 ---
 
 # Additional Resources
 
-- **Sitemap**: https://example.com/sitemap.xml
-- **Robots.txt**: https://example.com/robots.txt
+- **Sitemap**: https://hakola-market.zappy5.app/sitemap.xml
+- **Robots.txt**: https://hakola-market.zappy5.app/robots.txt
