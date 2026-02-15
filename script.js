@@ -493,6 +493,8 @@ window.onload = function() {
 })();
 
 ;
+
+;
 /* ==ZAPPY E-COMMERCE JS START== */
 // E-commerce functionality
 (function() {
@@ -4632,22 +4634,20 @@ function renderProductDetail(container, product, t) {
           }
         </div>
         ${variantSelectorHtml}
-        ${isCatalogMode ? '' : `
-        <div class="product-quantity">
-          <label>${t.quantity}${(() => {
-            const unit = product.quantity_unit || 'piece';
-            if (unit !== 'piece') {
-              const unitLabel = product.custom_unit_label || (t.unitLabels && t.unitLabels[unit]) || unit;
-              return ' (' + unitLabel + ')';
-            }
-            return '';
-          })()}:</label>
-          <div class="quantity-selector">
-            <button type="button" onclick="adjustQuantity(-1)">−</button>
-            <input type="number" id="product-quantity" value="${product.quantity_step || 1}" min="${product.quantity_step || 1}" max="9999" step="${product.quantity_step || 1}" data-unit="${product.quantity_unit || 'piece'}" data-step="${product.quantity_step || 1}">
-            <button type="button" onclick="adjustQuantity(1)">+</button>
-          </div>
-        </div>
+        ${(() => {
+          if (isCatalogMode) return '';
+          const qStep = parseFloat(product.quantity_step) || 1;
+          const qUnit = product.quantity_unit || 'piece';
+          const unitLabel = qUnit !== 'piece' ? (' (' + (product.custom_unit_label || (t.unitLabels && t.unitLabels[qUnit]) || qUnit) + ')') : '';
+          return '<div class="product-quantity">' +
+            '<label>' + t.quantity + unitLabel + ':</label>' +
+            '<div class="quantity-selector">' +
+              '<button type="button" onclick="adjustQuantity(-1)">−</button>' +
+              '<input type="number" id="product-quantity" value="' + qStep + '" min="' + qStep + '" max="9999" step="' + qStep + '" data-unit="' + qUnit + '" data-step="' + qStep + '">' +
+              '<button type="button" onclick="adjustQuantity(1)">+</button>' +
+            '</div>' +
+          '</div>';
+        })()}
         `}
         <div class="product-actions ${isCatalogMode ? 'catalog-mode' : ''}">
           ${isCatalogMode ? `
