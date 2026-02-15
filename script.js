@@ -497,6 +497,8 @@ window.onload = function() {
 ;
 
 ;
+
+;
 /* ==ZAPPY E-COMMERCE JS START== */
 // E-commerce functionality
 (function() {
@@ -715,6 +717,26 @@ function stripHtmlToText(html) {
   function formatQtyDisplay(item) {
     var label = getUnitLabel(item);
     return label ? item.quantity + ' ' + label : item.quantity;
+  }
+  
+  // Compute "price per reference unit" HTML for product cards/detail page
+  // For gram → per 100g, for ml → per 100ml, for kg/liter → per kg/L
+  function getPricePerUnitHtml(p) {
+    if (!p.show_price_per_unit) return '';
+    var unit = p.quantity_unit || 'piece';
+    if (unit === 'piece') return '';
+    var step = parseFloat(p.quantity_step) || 1;
+    var price = parseFloat(p.sale_price) && parseFloat(p.sale_price) < parseFloat(p.price) ? parseFloat(p.sale_price) : parseFloat(p.price);
+    if (!price || !step) return '';
+    var refAmount, refLabel;
+    if (unit === 'gram') { refAmount = 100; refLabel = '100' + ((t.unitLabels && t.unitLabels.gram) || 'g'); }
+    else if (unit === 'ml') { refAmount = 100; refLabel = '100' + ((t.unitLabels && t.unitLabels.ml) || 'ml'); }
+    else if (unit === 'kg') { refAmount = 1; refLabel = (t.unitLabels && t.unitLabels.kg) || 'kg'; }
+    else if (unit === 'liter') { refAmount = 1; refLabel = (t.unitLabels && t.unitLabels.liter) || 'L'; }
+    else if (unit === 'custom') { refAmount = 1; refLabel = p.custom_unit_label || ''; }
+    else return '';
+    var pricePerRef = (price / step) * refAmount;
+    return '<div class="price-per-unit-info">' + t.currency + pricePerRef.toFixed(2) + ' / ' + refLabel + '</div>';
   }
   
   // Get effective price (sale_price if available and less than price, otherwise price)
@@ -971,7 +993,8 @@ function stripHtmlToText(html) {
       var localizedViewDetails = getEcomText('viewDetails', t.viewDetails);
       
       // Only include price div if showPrice is true
-      var priceHtml = showPrice ? '<div class="price">' + displayPrice + '</div>' : '';
+      var pricePerUnitHtml = getPricePerUnitHtml(p);
+      var priceHtml = showPrice ? '<div class="price">' + displayPrice + '</div>' + pricePerUnitHtml : '';
       
       if (productLayout === 'compact') {
         // Compact: image, name, price only
@@ -4076,7 +4099,8 @@ function renderProductGrid(grid, products, t, isFeaturedSection) {
     var layout = additionalJsProductLayout || 'standard';
     
     // Only include price div if showPrice is true
-    var priceHtml = showPrice ? '<div class="price">' + displayPrice + '</div>' : '';
+    var pricePerUnitHtml = getPricePerUnitHtml(p);
+    var priceHtml = showPrice ? '<div class="price">' + displayPrice + '</div>' + pricePerUnitHtml : '';
     
     if (layout === 'compact') {
       // Compact: image, name, price only
@@ -4627,6 +4651,23 @@ function renderProductDetail(container, product, t) {
             return '';
           })()}
         </div>
+        ${(() => {
+          if (!product.show_price_per_unit) return '';
+          const unit = product.quantity_unit || 'piece';
+          if (unit === 'piece') return '';
+          const step = parseFloat(product.quantity_step) || 1;
+          const effectivePrice = product.sale_price && parseFloat(product.sale_price) < parseFloat(product.price) ? parseFloat(product.sale_price) : parseFloat(product.price);
+          if (!effectivePrice || !step) return '';
+          let refAmount, refLabel;
+          if (unit === 'gram') { refAmount = 100; refLabel = '100' + ((t.unitLabels && t.unitLabels.gram) || 'g'); }
+          else if (unit === 'ml') { refAmount = 100; refLabel = '100' + ((t.unitLabels && t.unitLabels.ml) || 'ml'); }
+          else if (unit === 'kg') { refAmount = 1; refLabel = (t.unitLabels && t.unitLabels.kg) || 'kg'; }
+          else if (unit === 'liter') { refAmount = 1; refLabel = (t.unitLabels && t.unitLabels.liter) || 'L'; }
+          else if (unit === 'custom') { refAmount = 1; refLabel = product.custom_unit_label || ''; }
+          else return '';
+          const pricePerRef = (effectivePrice / step) * refAmount;
+          return '<div class="price-per-unit-info">' + t.currency + pricePerRef.toFixed(2) + ' / ' + refLabel + '</div>';
+        })()}
         ` : ''}
         ${product.sku ? '<div class="product-sku" id="product-sku-display">' + t.sku + ': ' + product.sku + '</div>' : ''}
         <div class="product-stock ${baseInStock ? 'in-stock' : 'out-of-stock'}" id="product-stock-display">
