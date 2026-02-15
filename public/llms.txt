@@ -1,6 +1,4 @@
-# הקולה מרקט — Generative Engine Optimization Map
-
-> A מזון ומעדנייה business.
+# Business — Generative Engine Optimization Map
 
 ---
 
@@ -68,19 +66,7 @@ Information about WCAG compliance and accessibility features.
 
 # Business Context (for LLM understanding)
 
-## About הקולה מרקט
-הקולה מרקט is a business in the מזון ומעדנייה industry.
-
-## Target Audience
-- חובבי אוכל גורמה
-- אנשי מקצוע עסוקים
-- אנשים מודעים לבריאות
-- חובבי קולינריה
-- מארגני אירועים
-
-## Industry
-מזון ומעדנייה
-
+## About Business
 ---
 
 # Additional Resources
