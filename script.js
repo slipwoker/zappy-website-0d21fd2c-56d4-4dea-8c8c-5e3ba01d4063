@@ -499,6 +499,10 @@ window.onload = function() {
 ;
 
 ;
+
+;
+
+;
 /* ==ZAPPY E-COMMERCE JS START== */
 // E-commerce functionality
 (function() {
@@ -745,6 +749,15 @@ function stripHtmlToText(html) {
       return parseFloat(item.sale_price);
     }
     return parseFloat(item.price);
+  }
+  
+  // Get cart line total: price is per step, so total = price * (quantity / step)
+  function getCartLineTotal(item) {
+    var price = getItemPrice(item);
+    var step = parseFloat(item.quantityStep) || 1;
+    var unit = item.quantityUnit || item.quantity_unit || 'piece';
+    if (unit === 'piece') return price * item.quantity;
+    return price * (item.quantity / step);
   }
   
   function addToCart(product) {
@@ -1061,15 +1074,15 @@ function stripHtmlToText(html) {
     
     let total = 0;
     drawerItems.innerHTML = cart.map(item => {
-      const itemPrice = getItemPrice(item);
-      total += itemPrice * item.quantity;
+      const lineTotal = getCartLineTotal(item);
+      total += lineTotal;
       const variantInfo = item.variantName ? '<div class="cart-item-variant">' + item.variantName + '</div>' : '';
       return '<div class="cart-item" data-item-id="' + item.id + (item.selectedVariant ? '-' + item.selectedVariant.id : '') + '">' +
         '<img src="' + (resolveProductImageUrl(item.images?.[0]) || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2270%22 height=%2270%22 viewBox=%220 0 70 70%22%3E%3Crect fill=%22%23f3f4f6%22 width=%2270%22 height=%2270%22/%3E%3Cpath fill=%22%239ca3af%22 d=%22M28 25h14v14H28z%22/%3E%3C/svg%3E') + '" alt="' + item.name + '">' +
         '<div class="cart-item-info">' +
           '<div class="cart-item-name">' + item.name + '</div>' +
           variantInfo +
-          '<div class="cart-item-price">' + t.currency + (itemPrice * item.quantity).toFixed(2) + '</div>' +
+          '<div class="cart-item-price">' + t.currency + lineTotal.toFixed(2) + '</div>' +
           '<div class="cart-item-qty">' +
             '<button onclick="window.zappyUpdateQty(\'' + item.id + (item.selectedVariant ? '-' + item.selectedVariant.id : '') + '\', -1)">−</button>' +
             '<span>' + formatQtyDisplay(item) + '</span>' +
@@ -1165,8 +1178,9 @@ function stripHtmlToText(html) {
     
     let total = 0;
     itemsEl.innerHTML = cart.map(item => {
+      const lineTotal = getCartLineTotal(item);
+      total += lineTotal;
       const itemPrice = getItemPrice(item);
-      total += itemPrice * item.quantity;
       const variantInfo = item.variantName ? '<br><span style="font-size:12px;color:#6b7280;">' + item.variantName + '</span>' : '';
       const compositeId = item.selectedVariant ? item.id + '-' + item.selectedVariant.id : item.id;
       return '<div class="cart-item">' +
@@ -1888,7 +1902,7 @@ function stripHtmlToText(html) {
   
   // Get cart subtotal
   function getCartSubtotal() {
-    return cart.reduce((sum, item) => sum + (getItemPrice(item) * item.quantity), 0);
+    return cart.reduce((sum, item) => sum + getCartLineTotal(item), 0);
   }
   
   // Calculate shipping cost
@@ -1957,11 +1971,11 @@ function stripHtmlToText(html) {
     // Render order items
     if (orderItemsEl) {
       orderItemsEl.innerHTML = cart.map(item => {
-        const itemPrice = getItemPrice(item);
+        const lineTotal = getCartLineTotal(item);
         const variantLabel = item.variantName ? ' (' + item.variantName + ')' : '';
         return '<div class="order-item">' +
-          '<span>' + item.name + variantLabel + ' x ' + item.quantity + '</span>' +
-          '<span>' + t.currency + (itemPrice * item.quantity).toFixed(2) + '</span>' +
+          '<span>' + item.name + variantLabel + ' x ' + formatQtyDisplay(item) + '</span>' +
+          '<span>' + t.currency + lineTotal.toFixed(2) + '</span>' +
         '</div>';
       }).join('');
     }
@@ -2834,14 +2848,11 @@ function stripHtmlToText(html) {
           // Render items
           if (orderData.cartItems && orderData.cartItems.length > 0) {
             orderItemsList.innerHTML = orderData.cartItems.map(function(item) {
-              // Use sale_price if available and less than regular price
-              var itemPrice = (item.sale_price && parseFloat(item.sale_price) < parseFloat(item.price)) 
-                ? parseFloat(item.sale_price) 
-                : parseFloat(item.price);
+              var lineTotal = getCartLineTotal(item);
               var variantLabel = item.variantName ? ' (' + item.variantName + ')' : '';
               return '<div class="order-success-item">' +
-                '<span>' + item.name + variantLabel + ' x ' + item.quantity + '</span>' +
-                '<span>' + t.currency + (itemPrice * item.quantity).toFixed(2) + '</span>' +
+                '<span>' + item.name + variantLabel + ' x ' + formatQtyDisplay(item) + '</span>' +
+                '<span>' + t.currency + lineTotal.toFixed(2) + '</span>' +
                 '</div>';
             }).join('');
           }
@@ -4645,8 +4656,10 @@ function renderProductDetail(container, product, t) {
           }${(() => {
             const unit = product.quantity_unit || 'piece';
             if (unit !== 'piece') {
+              const step = parseFloat(product.quantity_step) || 1;
               const unitLabel = product.custom_unit_label || (t.unitLabels && t.unitLabels[unit]) || unit;
-              return ' <span class="price-per-unit">' + t.perUnit + ' ' + unitLabel + '</span>';
+              const stepPrefix = step !== 1 ? step + ' ' : '';
+              return ' <span class="price-per-unit">' + t.perUnit + ' ' + stepPrefix + unitLabel + '</span>';
             }
             return '';
           })()}
