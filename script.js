@@ -503,6 +503,8 @@ window.onload = function() {
 ;
 
 ;
+
+;
 /* ==ZAPPY E-COMMERCE JS START== */
 // E-commerce functionality
 (function() {
@@ -725,21 +727,41 @@ function stripHtmlToText(html) {
   
   // Compute "price per reference unit" HTML for product cards/detail page
   // For gram → per 100g, for ml → per 100ml, for kg/liter → per kg/L
+  // For piece-based products with piece_unit_type/value → compute from piece weight
   function getPricePerUnitHtml(p) {
     if (!p.show_price_per_unit) return '';
     var unit = p.quantity_unit || 'piece';
-    if (unit === 'piece') return '';
-    var step = parseFloat(p.quantity_step) || 1;
     var price = parseFloat(p.sale_price) && parseFloat(p.sale_price) < parseFloat(p.price) ? parseFloat(p.sale_price) : parseFloat(p.price);
-    if (!price || !step) return '';
-    var refAmount, refLabel;
-    if (unit === 'gram') { refAmount = 100; refLabel = '100' + ((t.unitLabels && t.unitLabels.gram) || 'g'); }
-    else if (unit === 'ml') { refAmount = 100; refLabel = '100' + ((t.unitLabels && t.unitLabels.ml) || 'ml'); }
-    else if (unit === 'kg') { refAmount = 1; refLabel = (t.unitLabels && t.unitLabels.kg) || 'kg'; }
-    else if (unit === 'liter') { refAmount = 1; refLabel = (t.unitLabels && t.unitLabels.liter) || 'L'; }
-    else if (unit === 'custom') { refAmount = 1; refLabel = p.custom_unit_label || ''; }
-    else return '';
-    var pricePerRef = (price / step) * refAmount;
+    if (!price) return '';
+    
+    var refAmount, refLabel, pricePerRef;
+    
+    if (unit === 'piece') {
+      // Piece-based product: use piece_unit_type and piece_unit_value
+      var pieceUnit = p.piece_unit_type;
+      var pieceValue = parseFloat(p.piece_unit_value);
+      if (!pieceUnit || !pieceValue) return '';
+      // Normalize to a reference amount based on the piece unit type
+      if (pieceUnit === 'gram') { refAmount = 100; refLabel = '100' + ((t.unitLabels && t.unitLabels.gram) || 'g'); }
+      else if (pieceUnit === 'ml') { refAmount = 100; refLabel = '100' + ((t.unitLabels && t.unitLabels.ml) || 'ml'); }
+      else if (pieceUnit === 'kg') { refAmount = 1; refLabel = (t.unitLabels && t.unitLabels.kg) || 'kg'; }
+      else if (pieceUnit === 'liter') { refAmount = 1; refLabel = (t.unitLabels && t.unitLabels.liter) || 'L'; }
+      else return '';
+      // price is for 1 piece which contains pieceValue of pieceUnit
+      pricePerRef = (price / pieceValue) * refAmount;
+    } else {
+      var step = parseFloat(p.quantity_step) || 1;
+      if (!step) return '';
+      if (unit === 'gram') { refAmount = 100; refLabel = '100' + ((t.unitLabels && t.unitLabels.gram) || 'g'); }
+      else if (unit === 'ml') { refAmount = 100; refLabel = '100' + ((t.unitLabels && t.unitLabels.ml) || 'ml'); }
+      else if (unit === 'kg') { refAmount = 1; refLabel = (t.unitLabels && t.unitLabels.kg) || 'kg'; }
+      else if (unit === 'liter') { refAmount = 1; refLabel = (t.unitLabels && t.unitLabels.liter) || 'L'; }
+      else if (unit === 'custom') { refAmount = 1; refLabel = p.custom_unit_label || ''; }
+      else return '';
+      // price is per step amount of unit
+      pricePerRef = (price / step) * refAmount;
+    }
+    
     return '<div class="price-per-unit-info">' + t.currency + pricePerRef.toFixed(2) + ' / ' + refLabel + '</div>';
   }
   
@@ -4667,18 +4689,31 @@ function renderProductDetail(container, product, t) {
         ${(() => {
           if (!product.show_price_per_unit) return '';
           const unit = product.quantity_unit || 'piece';
-          if (unit === 'piece') return '';
-          const step = parseFloat(product.quantity_step) || 1;
           const effectivePrice = product.sale_price && parseFloat(product.sale_price) < parseFloat(product.price) ? parseFloat(product.sale_price) : parseFloat(product.price);
-          if (!effectivePrice || !step) return '';
-          let refAmount, refLabel;
-          if (unit === 'gram') { refAmount = 100; refLabel = '100' + ((t.unitLabels && t.unitLabels.gram) || 'g'); }
-          else if (unit === 'ml') { refAmount = 100; refLabel = '100' + ((t.unitLabels && t.unitLabels.ml) || 'ml'); }
-          else if (unit === 'kg') { refAmount = 1; refLabel = (t.unitLabels && t.unitLabels.kg) || 'kg'; }
-          else if (unit === 'liter') { refAmount = 1; refLabel = (t.unitLabels && t.unitLabels.liter) || 'L'; }
-          else if (unit === 'custom') { refAmount = 1; refLabel = product.custom_unit_label || ''; }
-          else return '';
-          const pricePerRef = (effectivePrice / step) * refAmount;
+          if (!effectivePrice) return '';
+          let refAmount, refLabel, pricePerRef;
+          if (unit === 'piece') {
+            // Piece-based: use piece_unit_type and piece_unit_value
+            const pieceUnit = product.piece_unit_type;
+            const pieceValue = parseFloat(product.piece_unit_value);
+            if (!pieceUnit || !pieceValue) return '';
+            if (pieceUnit === 'gram') { refAmount = 100; refLabel = '100' + ((t.unitLabels && t.unitLabels.gram) || 'g'); }
+            else if (pieceUnit === 'ml') { refAmount = 100; refLabel = '100' + ((t.unitLabels && t.unitLabels.ml) || 'ml'); }
+            else if (pieceUnit === 'kg') { refAmount = 1; refLabel = (t.unitLabels && t.unitLabels.kg) || 'kg'; }
+            else if (pieceUnit === 'liter') { refAmount = 1; refLabel = (t.unitLabels && t.unitLabels.liter) || 'L'; }
+            else return '';
+            pricePerRef = (effectivePrice / pieceValue) * refAmount;
+          } else {
+            const step = parseFloat(product.quantity_step) || 1;
+            if (!step) return '';
+            if (unit === 'gram') { refAmount = 100; refLabel = '100' + ((t.unitLabels && t.unitLabels.gram) || 'g'); }
+            else if (unit === 'ml') { refAmount = 100; refLabel = '100' + ((t.unitLabels && t.unitLabels.ml) || 'ml'); }
+            else if (unit === 'kg') { refAmount = 1; refLabel = (t.unitLabels && t.unitLabels.kg) || 'kg'; }
+            else if (unit === 'liter') { refAmount = 1; refLabel = (t.unitLabels && t.unitLabels.liter) || 'L'; }
+            else if (unit === 'custom') { refAmount = 1; refLabel = product.custom_unit_label || ''; }
+            else return '';
+            pricePerRef = (effectivePrice / step) * refAmount;
+          }
           return '<div class="price-per-unit-info">' + t.currency + pricePerRef.toFixed(2) + ' / ' + refLabel + '</div>';
         })()}
         ` : ''}
