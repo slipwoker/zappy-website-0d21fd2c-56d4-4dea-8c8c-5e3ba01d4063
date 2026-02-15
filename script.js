@@ -495,6 +495,8 @@ window.onload = function() {
 ;
 
 ;
+
+;
 /* ==ZAPPY E-COMMERCE JS START== */
 // E-commerce functionality
 (function() {
@@ -4648,7 +4650,6 @@ function renderProductDetail(container, product, t) {
             '</div>' +
           '</div>';
         })()}
-        `}
         <div class="product-actions ${isCatalogMode ? 'catalog-mode' : ''}">
           ${isCatalogMode ? `
             <a href="mailto:${encodeURIComponent(t.businessEmail)}?subject=${encodeURIComponent(t.inquiryAbout + ' ' + product.name)}" class="btn btn-primary inquiry-btn">
