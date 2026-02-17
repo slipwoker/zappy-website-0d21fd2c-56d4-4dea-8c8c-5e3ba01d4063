@@ -509,6 +509,8 @@ window.onload = function() {
 ;
 
 ;
+
+;
 /* ==ZAPPY E-COMMERCE JS START== */
 // E-commerce functionality
 (function() {
@@ -4239,7 +4241,7 @@ async function loadFeaturedProducts() {
   
   try {
     // Only fetch featured products - no fallback, with language support
-    const res = await fetch(buildApiUrlWithLang('/api/ecommerce/storefront/products?websiteId=' + websiteId + '&featured=true&limit=6'));
+    const res = await fetch(buildApiUrlWithLang('/api/ecommerce/storefront/products?websiteId=' + websiteId + '&featured=true'));
     const data = await res.json();
     if (!data.success || !data.data?.length) {
       // Show a friendly message when no featured products
