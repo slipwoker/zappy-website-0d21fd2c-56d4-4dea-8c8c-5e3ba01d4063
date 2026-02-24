@@ -515,6 +515,8 @@ window.onload = function() {
 ;
 
 ;
+
+;
 /* ==ZAPPY E-COMMERCE JS START== */
 // E-commerce functionality
 (function() {
@@ -4970,6 +4972,7 @@ function renderProductDetail(container, product, t) {
         ` : ''}
       </div>
       <div class="product-info">
+        ${product.brand ? '<div class="product-brand">' + product.brand + '</div>' : ''}
         <h1>${product.name}</h1>
         ${showPrice ? `
         <div class="product-price" id="product-price-display">
@@ -5405,6 +5408,7 @@ function updateVariantUI(variant, product, t, selectedAttributes) {
   const stockDisplay = document.getElementById('product-stock-display');
   const skuDisplay = document.getElementById('product-sku-display');
   const addToCartBtn = document.getElementById('add-to-cart-btn');
+  const mainImage = document.getElementById('product-main-image');
   
   const basePrice = window.productBasePrice;
   const originalPrice = window.productOriginalPrice;
@@ -5412,6 +5416,11 @@ function updateVariantUI(variant, product, t, selectedAttributes) {
   const hasVariantPriceRange = window.productHasVariantPriceRange;
   const variantMinPrice = window.productVariantMinPrice;
   const startingAtLabel = getEcomText('startingAt', t.startingAt || 'Starting at');
+  
+  // Store original main image on first call
+  if (mainImage && !window._originalMainImageSrc) {
+    window._originalMainImageSrc = mainImage.src;
+  }
   
   if (variant) {
     // Use variant's own price if set, otherwise fall back to base price
@@ -5453,10 +5462,25 @@ function updateVariantUI(variant, product, t, selectedAttributes) {
       addToCartBtn.style.cursor = variantInStock ? 'pointer' : 'not-allowed';
     }
     
+    // Update main image if variant has a specific image
+    if (mainImage && variant.image) {
+      var variantImgSrc = variant.image;
+      if (window.resolveProductImageUrl) {
+        variantImgSrc = window.resolveProductImageUrl(variant.image);
+      }
+      mainImage.src = variantImgSrc;
+    } else if (mainImage && window._originalMainImageSrc) {
+      mainImage.src = window._originalMainImageSrc;
+    }
+    
     // Store selected variant
     window.selectedVariant = variant;
   } else {
     // No matching variant found
+    // Restore original image when no variant is matched
+    if (mainImage && window._originalMainImageSrc) {
+      mainImage.src = window._originalMainImageSrc;
+    }
     // Check if all attribute groups have a selection - if so, this is an unavailable combination
     var allGroupsSelected = false;
     var variantGroups = document.querySelectorAll('.variant-group');
@@ -5771,6 +5795,206 @@ async function loadRelatedProducts(currentProduct, t) {
   } catch (eOuter) {}
 })();
 /* END ZAPPY_PUBLISHED_LIGHTBOX_RUNTIME */
+
+
+/* ZAPPY_PUBLISHED_ZOOM_WRAPPER_RUNTIME */
+(function(){
+  try {
+    if (window.__zappyPublishedZoomInit) return;
+    window.__zappyPublishedZoomInit = true;
+
+    function parseObjPos(op) {
+      var x = 50, y = 50;
+      try {
+        if (typeof op === 'string') {
+          var m = op.match(/(-?\d+(?:\.\d+)?)%\s+(-?\d+(?:\.\d+)?)%/);
+          if (m) { x = parseFloat(m[1]); y = parseFloat(m[2]); }
+        }
+      } catch (e) {}
+      if (!isFinite(x)) x = 50; if (!isFinite(y)) y = 50;
+      return { x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) };
+    }
+
+    function coverPercents(imgA, contA) {
+      if (!isFinite(imgA) || imgA <= 0 || !isFinite(contA) || contA <= 0)
+        return { w: 100, h: 100 };
+      if (imgA >= contA) return { w: (imgA / contA) * 100, h: 100 };
+      return { w: 100, h: (contA / imgA) * 100 };
+    }
+
+    function applyZoom(wrapper, img) {
+      var zoom = parseFloat(img.getAttribute('data-zappy-zoom')) || 1;
+      if (!(zoom > 0)) zoom = 1;
+
+      var widthMode = wrapper.getAttribute('data-zappy-zoom-wrapper-width-mode');
+      if (widthMode === 'full') return;
+
+      var rect = wrapper.getBoundingClientRect();
+      if (!rect || !rect.width || !rect.height) return;
+
+      var nW = img.naturalWidth || 0, nH = img.naturalHeight || 0;
+      if (!(nW > 0 && nH > 0)) return;
+
+      var imgA = nW / nH;
+      var contA = rect.width / rect.height;
+      var cover = coverPercents(imgA, contA);
+
+      var wPct = 100, hPct = 100;
+      if (zoom >= 1) {
+        wPct = cover.w * zoom;
+        hPct = cover.h * zoom;
+      } else {
+        var t = (zoom - 0.5) / 0.5;
+        if (!isFinite(t)) t = 0;
+        t = Math.max(0, Math.min(1, t));
+        wPct = 100 + t * (cover.w - 100);
+        hPct = 100 + t * (cover.h - 100);
+      }
+
+      var op = img.style.objectPosition || window.getComputedStyle(img).objectPosition || '50% 50%';
+      var pos = parseObjPos(op);
+      var leftPct = (100 - wPct) * (pos.x / 100);
+      var topPct = (100 - hPct) * (pos.y / 100);
+
+      var isMobile = window.innerWidth <= 768;
+      if (isMobile) {
+        img.style.setProperty('position', 'relative', 'important');
+        img.style.setProperty('width', '100%', 'important');
+        img.style.setProperty('height', 'auto', 'important');
+        img.style.setProperty('max-width', '100%', 'important');
+        img.style.setProperty('display', 'block', 'important');
+        img.style.setProperty('object-fit', 'cover', 'important');
+        img.style.removeProperty('left');
+        img.style.removeProperty('top');
+      } else {
+        img.style.setProperty('position', 'absolute', 'important');
+        img.style.setProperty('left', leftPct + '%', 'important');
+        img.style.setProperty('top', topPct + '%', 'important');
+        img.style.setProperty('width', wPct + '%', 'important');
+        img.style.setProperty('height', hPct + '%', 'important');
+        img.style.setProperty('max-width', 'none', 'important');
+        img.style.setProperty('max-height', 'none', 'important');
+        img.style.setProperty('display', 'block', 'important');
+        img.style.setProperty('object-fit', zoom < 1 ? 'fill' : 'cover', 'important');
+      }
+      img.style.setProperty('margin', '0', 'important');
+    }
+
+    function initZoomWrappers() {
+      var wrappers = document.querySelectorAll('[data-zappy-zoom-wrapper="true"]');
+      for (var i = 0; i < wrappers.length; i++) {
+        (function(wrapper) {
+          var img = wrapper.querySelector('img');
+          if (!img) return;
+          if (wrapper.closest && wrapper.closest('.zappy-carousel-js-init, .zappy-carousel-active')) return;
+          if (img.complete && img.naturalWidth > 0) {
+            setTimeout(function() { applyZoom(wrapper, img); }, 0);
+          } else {
+            img.addEventListener('load', function onLoad() {
+              img.removeEventListener('load', onLoad);
+              applyZoom(wrapper, img);
+            }, { once: true });
+          }
+        })(wrappers[i]);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initZoomWrappers, { once: true });
+    } else {
+      setTimeout(initZoomWrappers, 50);
+    }
+  } catch (eOuter) {}
+})();
+/* END ZAPPY_PUBLISHED_ZOOM_WRAPPER_RUNTIME */
+
+
+/* ZAPPY_MOBILE_MENU_TOGGLE */
+(function(){
+  try {
+    if (window.__zappyMobileMenuToggleInit) return;
+    window.__zappyMobileMenuToggleInit = true;
+
+    function initMobileToggle() {
+      var toggle = document.querySelector('.mobile-toggle, #mobileToggle');
+      var navMenu = document.querySelector('#navMenu, .nav-menu, .navbar-menu');
+      if (!toggle || !navMenu) return;
+
+      // Skip if this toggle already has a click handler from the site's own JS
+      if (toggle.__zappyMobileToggleBound) return;
+      toggle.__zappyMobileToggleBound = true;
+
+      toggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var hamburgerIcon = toggle.querySelector('.hamburger-icon');
+        var closeIcon = toggle.querySelector('.close-icon');
+        var isOpen = navMenu.classList.contains('active') || navMenu.style.display === 'block';
+
+        if (isOpen) {
+          navMenu.classList.remove('active');
+          navMenu.style.display = '';
+          if (hamburgerIcon) hamburgerIcon.style.setProperty('display', 'block', 'important');
+          if (closeIcon) closeIcon.style.setProperty('display', 'none', 'important');
+          document.body.style.overflow = '';
+        } else {
+          navMenu.classList.add('active');
+          navMenu.style.display = 'block';
+          if (hamburgerIcon) hamburgerIcon.style.setProperty('display', 'none', 'important');
+          if (closeIcon) closeIcon.style.setProperty('display', 'block', 'important');
+          document.body.style.overflow = 'hidden';
+        }
+      }, true);
+
+      // Close on clicking outside
+      document.addEventListener('click', function(e) {
+        if (!navMenu.classList.contains('active')) return;
+        if (toggle.contains(e.target) || navMenu.contains(e.target)) return;
+        navMenu.classList.remove('active');
+        navMenu.style.display = '';
+        var hi = toggle.querySelector('.hamburger-icon');
+        var ci = toggle.querySelector('.close-icon');
+        if (hi) hi.style.setProperty('display', 'block', 'important');
+        if (ci) ci.style.setProperty('display', 'none', 'important');
+        document.body.style.overflow = '';
+      });
+
+      // Close on Escape key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && navMenu.classList.contains('active')) {
+          navMenu.classList.remove('active');
+          navMenu.style.display = '';
+          var hi = toggle.querySelector('.hamburger-icon');
+          var ci = toggle.querySelector('.close-icon');
+          if (hi) hi.style.setProperty('display', 'block', 'important');
+          if (ci) ci.style.setProperty('display', 'none', 'important');
+          document.body.style.overflow = '';
+        }
+      });
+
+      // Close when clicking a nav link (navigating)
+      navMenu.querySelectorAll('a').forEach(function(link) {
+        link.addEventListener('click', function() {
+          navMenu.classList.remove('active');
+          navMenu.style.display = '';
+          var hi = toggle.querySelector('.hamburger-icon');
+          var ci = toggle.querySelector('.close-icon');
+          if (hi) hi.style.setProperty('display', 'block', 'important');
+          if (ci) ci.style.setProperty('display', 'none', 'important');
+          document.body.style.overflow = '';
+        });
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initMobileToggle, { once: true });
+    } else {
+      initMobileToggle();
+    }
+  } catch (e) {}
+})();
+/* END ZAPPY_MOBILE_MENU_TOGGLE */
 
 
 /* ZAPPY_FAQ_ACCORDION_TOGGLE */
