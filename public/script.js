@@ -521,6 +521,8 @@ window.onload = function() {
 ;
 
 ;
+
+;
 /* ==ZAPPY E-COMMERCE JS START== */
 // E-commerce functionality
 (function() {
@@ -5225,22 +5227,34 @@ function changeMainImage(thumb, src) {
   thumb.classList.add('active');
 }
 
+function _zappyProductToast(message) {
+  var existing = document.querySelector('.zappy-product-toast');
+  if (existing) existing.remove();
+  var toast = document.createElement('div');
+  toast.className = 'zappy-product-toast';
+  toast.textContent = message;
+  toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 24px;border-radius:8px;z-index:10000;font-size:14px;opacity:0;transition:opacity 0.3s;';
+  document.body.appendChild(toast);
+  setTimeout(function() { toast.style.opacity = '1'; }, 10);
+  setTimeout(function() { toast.style.opacity = '0'; setTimeout(function() { toast.remove(); }, 300); }, 3000);
+}
+
 function toggleFavorite(productId) {
-  var tokenKey = 'zappy_customer_token_' + websiteId;
+  var wId = window.ZAPPY_WEBSITE_ID;
+  var tokenKey = 'zappy_customer_token_' + wId;
   var token = localStorage.getItem(tokenKey);
   var btn = document.getElementById('favorite-btn');
   if (!btn) return;
 
   if (!token) {
-    var currentPath = window.location.pathname + window.location.search;
     var loginUrl = '/login';
     var currentUrl = window.location.href;
     if (currentUrl.includes('/api/website/preview')) {
       var isFullscreen = currentUrl.includes('preview-fullscreen');
       var previewType = isFullscreen ? 'preview-fullscreen' : 'preview';
-      loginUrl = '/api/website/' + previewType + '/' + websiteId + '?page=' + encodeURIComponent('/login');
+      loginUrl = '/api/website/' + previewType + '/' + wId + '?page=' + encodeURIComponent('/login');
     }
-    if (typeof showToast === 'function') showToast(getEcomText('loginToFavorite', 'יש להתחבר כדי לשמור מועדפים'), 'info');
+    _zappyProductToast('יש להתחבר כדי לשמור מועדפים');
     setTimeout(function() { window.location.href = loginUrl; }, 1200);
     return;
   }
@@ -5250,11 +5264,11 @@ function toggleFavorite(productId) {
 
   if (isActive) {
     btn.classList.remove('active');
-    fetch(apiBase + '/api/ecommerce/customers/me/favorites/' + productId + '?websiteId=' + websiteId, {
+    fetch(apiBase + '/api/ecommerce/customers/me/favorites/' + productId + '?websiteId=' + wId, {
       method: 'DELETE',
       headers: { 'Authorization': 'Bearer ' + token }
     }).then(function(r) {
-      if (r.ok && typeof showToast === 'function') showToast(getEcomText('removedFromFavorites', 'הוסר מהמועדפים'), 'success');
+      if (r.ok) _zappyProductToast('הוסר מהמועדפים');
     }).catch(function() {
       btn.classList.add('active');
     });
@@ -5263,9 +5277,9 @@ function toggleFavorite(productId) {
     fetch(apiBase + '/api/ecommerce/customers/me/favorites', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ websiteId: websiteId, productId: productId })
+      body: JSON.stringify({ websiteId: wId, productId: productId })
     }).then(function(r) {
-      if (r.ok && typeof showToast === 'function') showToast(getEcomText('addedToFavorites', 'נוסף למועדפים'), 'success');
+      if (r.ok) _zappyProductToast('נוסף למועדפים');
     }).catch(function() {
       btn.classList.remove('active');
     });
@@ -5276,7 +5290,7 @@ function shareProduct() {
   var url = window.location.href;
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(url).then(function() {
-      if (typeof showToast === 'function') showToast(getEcomText('linkCopied', 'הקישור הועתק!'), 'success');
+      _zappyProductToast('הקישור הועתק!');
     });
   } else {
     var input = document.createElement('input');
@@ -5285,12 +5299,13 @@ function shareProduct() {
     input.select();
     document.execCommand('copy');
     document.body.removeChild(input);
-    if (typeof showToast === 'function') showToast(getEcomText('linkCopied', 'הקישור הועתק!'), 'success');
+    _zappyProductToast('הקישור הועתק!');
   }
 }
 
 function checkFavoriteStatus(productId) {
-  var tokenKey = 'zappy_customer_token_' + websiteId;
+  var wId = window.ZAPPY_WEBSITE_ID;
+  var tokenKey = 'zappy_customer_token_' + wId;
   var token = localStorage.getItem(tokenKey);
   if (!token) return;
 
@@ -5298,7 +5313,7 @@ function checkFavoriteStatus(productId) {
   if (!btn) return;
 
   var apiBase = window.ZAPPY_API_BASE || '';
-  fetch(apiBase + '/api/ecommerce/customers/me/favorites/' + productId + '?websiteId=' + websiteId, {
+  fetch(apiBase + '/api/ecommerce/customers/me/favorites/' + productId + '?websiteId=' + wId, {
     headers: { 'Authorization': 'Bearer ' + token }
   }).then(function(r) { return r.json(); })
     .then(function(data) {
