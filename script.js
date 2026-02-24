@@ -545,6 +545,8 @@ window.onload = function() {
 ;
 
 ;
+
+;
 /* ==ZAPPY E-COMMERCE JS START== */
 // E-commerce functionality
 (function() {
@@ -3848,7 +3850,7 @@ function stripHtmlToText(html) {
             ? t.currency + parseFloat(p.sale_price).toFixed(2) + ' <span style="text-decoration:line-through;color:var(--text-secondary,#6b7280);font-weight:400;font-size:0.8em;">' + t.currency + parseFloat(p.price).toFixed(2) + '</span>'
             : t.currency + parseFloat(p.price).toFixed(2);
 
-          return '<div class="favorite-card" style="background:var(--surface-color,var(--surface,inherit));border:1px solid var(--border-color,rgba(128,128,128,0.2));border-radius:12px;overflow:hidden;position:relative;transition:box-shadow 0.2s;" data-product-id="' + p.id + '">' +
+          return '<div class="favorite-card" style="background:transparent;border:1px solid var(--border-color,rgba(128,128,128,0.2));border-radius:12px;overflow:hidden;position:relative;transition:box-shadow 0.2s;" data-product-id="' + p.id + '">' +
             '<button class="favorite-remove-btn" style="position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;border:none;background:rgba(128,128,128,0.3);color:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;z-index:2;line-height:1;" onclick="removeFavoriteFromAccount(\'' + p.id + '\', this)" title="' + (t.removeFromFavorites || 'Remove') + '">&times;</button>' +
             '<a href="/product/' + (p.slug || p.id) + '" style="text-decoration:none;color:inherit;display:block;">' +
               (imgSrc ? '<img src="' + imgSrc + '" alt="' + (p.name || '').replace(/'/g, '&apos;') + '" style="width:100%;aspect-ratio:1;object-fit:contain;display:block;border-radius:8px 8px 0 0;">' : '<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#999;font-size:32px;">📦</div>') +
