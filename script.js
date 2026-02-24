@@ -535,6 +535,8 @@ window.onload = function() {
 ;
 
 ;
+
+;
 /* ==ZAPPY E-COMMERCE JS START== */
 // E-commerce functionality
 (function() {
@@ -3809,9 +3811,14 @@ function stripHtmlToText(html) {
       if (!favLoading || !favGrid) return;
 
       try {
+        var controller = new AbortController();
+        var timeoutId = setTimeout(function() { controller.abort(); }, 8000);
         var res = await fetch(buildApiUrl('/api/ecommerce/customers/me/favorites?websiteId=' + encodeURIComponent(websiteId)), {
-          headers: { 'Authorization': 'Bearer ' + token }
+          headers: { 'Authorization': 'Bearer ' + token },
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
         var data = await res.json();
         favLoading.style.display = 'none';
 
@@ -3974,6 +3981,16 @@ function stripHtmlToText(html) {
       // User is not logged in - redirect account links to login page
       accountLinks.forEach(function(link) {
         link.href = '/login';
+        link.addEventListener('click', function() {
+          var currentPath = window.location.pathname + window.location.search;
+          var currentUrl = window.location.href;
+          if (currentUrl.includes('/api/website/preview')) {
+            var pageParam = new URLSearchParams(window.location.search).get('page') || '/';
+            sessionStorage.setItem('zappy_login_return', pageParam);
+          } else if (currentPath !== '/login') {
+            sessionStorage.setItem('zappy_login_return', currentPath);
+          }
+        });
       });
     }
   }
@@ -5261,10 +5278,15 @@ function toggleFavorite(productId) {
   if (!token) {
     var loginUrl = '/login';
     var currentUrl = window.location.href;
+    var currentPath = window.location.pathname + window.location.search;
     if (currentUrl.includes('/api/website/preview')) {
       var isFullscreen = currentUrl.includes('preview-fullscreen');
       var previewType = isFullscreen ? 'preview-fullscreen' : 'preview';
+      var pageParam = new URLSearchParams(window.location.search).get('page') || '/';
+      sessionStorage.setItem('zappy_login_return', pageParam);
       loginUrl = '/api/website/' + previewType + '/' + wId + '?page=' + encodeURIComponent('/login');
+    } else {
+      sessionStorage.setItem('zappy_login_return', currentPath);
     }
     _zappyProductToast('יש להתחבר כדי לשמור מועדפים');
     setTimeout(function() { window.location.href = loginUrl; }, 1200);
