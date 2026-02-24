@@ -517,6 +517,8 @@ window.onload = function() {
 ;
 
 ;
+
+;
 /* ==ZAPPY E-COMMERCE JS START== */
 // E-commerce functionality
 (function() {
@@ -4972,8 +4974,8 @@ function renderProductDetail(container, product, t) {
         ` : ''}
       </div>
       <div class="product-info">
-        ${product.brand ? '<div class="product-brand">' + product.brand + '</div>' : ''}
         <h1>${product.name}</h1>
+        ${product.brand ? '<div class="product-brand">' + product.brand + '</div>' : ''}
         ${showPrice ? `
         <div class="product-price" id="product-price-display">
           ${hasVariantPriceRange
