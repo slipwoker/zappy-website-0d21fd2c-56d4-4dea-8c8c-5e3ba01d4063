@@ -543,6 +543,8 @@ window.onload = function() {
 ;
 
 ;
+
+;
 /* ==ZAPPY E-COMMERCE JS START== */
 // E-commerce functionality
 (function() {
@@ -3846,13 +3848,13 @@ function stripHtmlToText(html) {
             ? t.currency + parseFloat(p.sale_price).toFixed(2) + ' <span style="text-decoration:line-through;color:var(--text-secondary,#6b7280);font-weight:400;font-size:0.8em;">' + t.currency + parseFloat(p.price).toFixed(2) + '</span>'
             : t.currency + parseFloat(p.price).toFixed(2);
 
-          return '<div class="favorite-card" style="background:var(--background-color,#f9fafb);border:1px solid var(--border-color,#e5e7eb);border-radius:10px;overflow:hidden;position:relative;transition:box-shadow 0.2s;" data-product-id="' + p.id + '">' +
-            '<button class="favorite-remove-btn" style="position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,0.9);color:#dc2626;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;z-index:2;box-shadow:0 1px 4px rgba(0,0,0,0.1);" onclick="removeFavoriteFromAccount(\'' + p.id + '\', this)" title="' + (t.removeFromFavorites || 'Remove') + '">&times;</button>' +
+          return '<div class="favorite-card" style="background:var(--surface-color,var(--surface,inherit));border:1px solid var(--border-color,rgba(128,128,128,0.2));border-radius:12px;overflow:hidden;position:relative;transition:box-shadow 0.2s;" data-product-id="' + p.id + '">' +
+            '<button class="favorite-remove-btn" style="position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;border:none;background:rgba(128,128,128,0.3);color:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;z-index:2;line-height:1;" onclick="removeFavoriteFromAccount(\'' + p.id + '\', this)" title="' + (t.removeFromFavorites || 'Remove') + '">&times;</button>' +
             '<a href="/product/' + (p.slug || p.id) + '" style="text-decoration:none;color:inherit;display:block;">' +
-              (imgSrc ? '<img src="' + imgSrc + '" alt="' + (p.name || '').replace(/'/g, '&apos;') + '" style="width:100%;aspect-ratio:1;object-fit:cover;display:block;">' : '<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#999;font-size:32px;background:var(--surface-color,#f3f4f6);">📦</div>') +
+              (imgSrc ? '<img src="' + imgSrc + '" alt="' + (p.name || '').replace(/'/g, '&apos;') + '" style="width:100%;aspect-ratio:1;object-fit:contain;display:block;border-radius:8px 8px 0 0;">' : '<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#999;font-size:32px;">📦</div>') +
               '<div style="padding:12px;">' +
-                '<h4 style="font-size:0.875rem;font-weight:500;color:var(--text-color,#1f2937);margin:0 0 6px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (p.name || '') + '</h4>' +
-                '<div style="font-weight:600;color:var(--primary-color,#ff0083);font-size:0.9rem;">' + displayPrice + '</div>' +
+                '<h4 style="font-size:0.875rem;font-weight:500;color:var(--text-color,var(--text,inherit));margin:0 0 6px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (p.name || '') + '</h4>' +
+                '<div style="font-weight:600;color:var(--primary-color,var(--primary,inherit));font-size:0.9rem;">' + displayPrice + '</div>' +
               '</div>' +
             '</a>' +
           '</div>';
