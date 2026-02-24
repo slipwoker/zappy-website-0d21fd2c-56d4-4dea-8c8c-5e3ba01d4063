@@ -523,6 +523,8 @@ window.onload = function() {
 ;
 
 ;
+
+;
 /* ==ZAPPY E-COMMERCE JS START== */
 // E-commerce functionality
 (function() {
@@ -3822,9 +3824,9 @@ function stripHtmlToText(html) {
             : t.currency + parseFloat(p.price).toFixed(2);
 
           return '<div class="favorite-card" data-product-id="' + p.id + '">' +
-            '<button class="favorite-remove-btn" onclick="removeFavoriteFromAccount('' + p.id + '', this)" title="' + (t.removeFromFavorites || 'Remove') + '">&times;</button>' +
+            '<button class="favorite-remove-btn" onclick="removeFavoriteFromAccount(\'' + p.id + '\', this)" title="' + (t.removeFromFavorites || 'Remove') + '">&times;</button>' +
             '<a href="/product/' + (p.slug || p.id) + '">' +
-              (imgSrc ? '<img src="' + imgSrc + '" alt="' + (p.name || '') + '" class="favorite-card-img">' : '<div class="favorite-card-img" style="display:flex;align-items:center;justify-content:center;color:#999;font-size:32px;background:var(--surface-color,#f3f4f6);">📦</div>') +
+              (imgSrc ? '<img src="' + imgSrc + '" alt="' + (p.name || '').replace(/'/g, '&apos;') + '" class="favorite-card-img">' : '<div class="favorite-card-img" style="display:flex;align-items:center;justify-content:center;color:#999;font-size:32px;background:var(--surface-color,#f3f4f6);">📦</div>') +
               '<div class="favorite-card-body">' +
                 '<h4>' + (p.name || '') + '</h4>' +
                 '<div class="favorite-price">' + displayPrice + '</div>' +
