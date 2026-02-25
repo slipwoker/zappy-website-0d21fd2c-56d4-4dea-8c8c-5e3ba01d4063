@@ -593,6 +593,8 @@ window.onload = function() {
 ;
 
 ;
+
+;
 /* ==ZAPPY E-COMMERCE JS START== */
 // E-commerce functionality
 (function() {
@@ -1425,6 +1427,7 @@ function stripHtmlToText(html) {
     // Update grid class based on layout + view mode
     var viewClass = currentViewMode === 'list' ? ' view-list' : '';
     grid.className = 'product-grid layout-' + productLayout + viewClass;
+    grid.setAttribute('data-zappy-auto-grid', 'true');
     
     grid.innerHTML = products.map(function(p) {
       // Check if price should be displayed (default to true if not set)
@@ -4870,6 +4873,7 @@ function renderProductGrid(grid, products, t, isFeaturedSection, viewMode) {
   if (!isFeaturedSection) {
     var viewClass = (viewMode === 'list') ? ' view-list' : '';
     grid.className = 'product-grid layout-' + layout + viewClass;
+    grid.setAttribute('data-zappy-auto-grid', 'true');
   }
   
   // Get localized text for UI elements
