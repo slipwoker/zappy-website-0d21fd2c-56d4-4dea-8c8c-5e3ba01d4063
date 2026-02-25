@@ -5436,6 +5436,12 @@ body.accessibility-widget-visible ._access-menu {
 
 
 
+
+
+
+
+
+
 /* ==ZAPPY V2 E-COMMERCE THEME CSS== */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /* V2 E-COMMERCE CSS - Clean V2 Variables Only                                  */
@@ -5708,8 +5714,9 @@ main.page-container.ecommerce-page,
 .view-btn.active { background: var(--primary); color: var(--text-light); opacity: 1; }
 .view-btn:hover:not(.active) { background: rgba(0,0,0,0.05); }
 
+.product-grid .product-card .product-tags { display: none; }
 /* Sidebar */
-.product-sidebar { width: 240px; flex-shrink: 0; }
+.product-sidebar { width: 240px; flex-shrink: 0; position: sticky; top: 20px; max-height: calc(100vh - 40px); overflow-y: auto; align-self: flex-start; }
 .product-sidebar .sidebar-section { margin-bottom: 20px; }
 .product-sidebar .sidebar-section-title { font-size: 14px; font-weight: 600; color: var(--text-dark); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border-light); }
 .product-sidebar .sidebar-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; cursor: pointer; font-size: 13px; color: var(--text-dark); transition: color 0.15s; }

@@ -559,6 +559,8 @@ window.onload = function() {
 ;
 
 ;
+
+;
 /* ==ZAPPY E-COMMERCE JS START== */
 // E-commerce functionality
 (function() {
@@ -723,7 +725,7 @@ function stripHtmlToText(html) {
   let sidebarFiltersConfig = {};
   let sortingConfig = {};
   let viewToggleEnabled = true;
-  let currentSortKey = 'default';
+  let currentSortKey = 'popularity';
   let currentViewMode = localStorage.getItem('zappy_view_mode_' + websiteId) || 'grid';
   let activeSidebarFilters = { categories: [], brands: [], tags: [], priceMin: null, priceMax: null, sale: false };
   
@@ -1043,9 +1045,10 @@ function stripHtmlToText(html) {
     }
     
     // Step 3: Apply sorting
-    if (currentSortKey !== 'default') {
+    if (currentSortKey && currentSortKey !== 'default') {
       productsToShow = productsToShow.slice().sort(function(a, b) {
         switch (currentSortKey) {
+          case 'popularity': return (parseInt(b.purchase_count) || 0) - (parseInt(a.purchase_count) || 0);
           case 'price_asc': return parseFloat(a.price) - parseFloat(b.price);
           case 'price_desc': return parseFloat(b.price) - parseFloat(a.price);
           case 'name_asc': return (a.name || '').localeCompare(b.name || '');
@@ -1086,6 +1089,7 @@ function stripHtmlToText(html) {
       if (sortControl && sortSelect) {
         sortControl.style.display = '';
         var sortLabels = {
+          popularity: isRTL ? 'פופולריות' : 'Popularity',
           price_asc: isRTL ? 'מחיר: נמוך לגבוה' : 'Price: Low to High',
           price_desc: isRTL ? 'מחיר: גבוה לנמוך' : 'Price: High to Low',
           name_asc: isRTL ? 'שם: א-ת' : 'Name: A to Z',
@@ -4530,7 +4534,7 @@ let additionalJsAllProductsLabel = null;
 let additionalJsSidebarFiltersConfig = {};
 let additionalJsSortingConfig = {};
 let additionalJsViewToggleEnabled = true;
-let catCurrentSortKey = 'default';
+let catCurrentSortKey = 'popularity';
 let catCurrentViewMode = localStorage.getItem('zappy_view_mode_' + (window.ZAPPY_WEBSITE_ID || '')) || 'grid';
 let catActiveSidebarFilters = { categories: [], brands: [], tags: [], priceMin: null, priceMax: null, sale: false };
 let catCurrentFilter = 'all';
@@ -5299,9 +5303,10 @@ function applyCategoryFiltersAndRender(productGrid, t) {
   }
   
   // Apply sorting
-  if (catCurrentSortKey !== 'default') {
+  if (catCurrentSortKey && catCurrentSortKey !== 'default') {
     productsToShow = productsToShow.slice().sort(function(a, b) {
       switch (catCurrentSortKey) {
+        case 'popularity': return (parseInt(b.purchase_count) || 0) - (parseInt(a.purchase_count) || 0);
         case 'price_asc': return parseFloat(a.price) - parseFloat(b.price);
         case 'price_desc': return parseFloat(b.price) - parseFloat(a.price);
         case 'name_asc': return (a.name || '').localeCompare(b.name || '');
@@ -5341,6 +5346,7 @@ function initCategoryToolbar(isRTL, t) {
     if (sortControl && sortSelect) {
       sortControl.style.display = '';
       var sortLabels = {
+        popularity: isRTL ? 'פופולריות' : 'Popularity',
         price_asc: isRTL ? 'מחיר: נמוך לגבוה' : 'Price: Low to High',
         price_desc: isRTL ? 'מחיר: גבוה לנמוך' : 'Price: High to Low',
         name_asc: isRTL ? 'שם: א-ת' : 'Name: A to Z',
