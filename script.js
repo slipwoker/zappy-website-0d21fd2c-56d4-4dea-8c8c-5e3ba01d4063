@@ -547,6 +547,8 @@ window.onload = function() {
 ;
 
 ;
+
+;
 /* ==ZAPPY E-COMMERCE JS START== */
 // E-commerce functionality
 (function() {
@@ -708,6 +710,12 @@ function stripHtmlToText(html) {
   let vatRate = 0.18; // Default fallback (Israel VAT rate as of January 2025)
   let productLayout = 'standard'; // Default product card layout
   let storeSettingsFetched = false;
+  let sidebarFiltersConfig = {};
+  let sortingConfig = {};
+  let viewToggleEnabled = true;
+  let currentSortKey = 'default';
+  let currentViewMode = localStorage.getItem('zappy_view_mode_' + websiteId) || 'grid';
+  let activeSidebarFilters = { categories: [], tags: [], priceMin: null, priceMax: null, sale: false };
   
   // Fetch store settings (including tax rate and product layout) from API
   async function fetchStoreSettings() {
@@ -721,6 +729,15 @@ function stripHtmlToText(html) {
         }
         if (data.data.productLayout) {
           productLayout = data.data.productLayout;
+        }
+        if (data.data.sidebarFiltersConfig) {
+          sidebarFiltersConfig = data.data.sidebarFiltersConfig;
+        }
+        if (data.data.sortingConfig) {
+          sortingConfig = data.data.sortingConfig;
+        }
+        if (data.data.viewToggleEnabled != null) {
+          viewToggleEnabled = data.data.viewToggleEnabled;
         }
         storeSettingsFetched = true;
       }
@@ -959,32 +976,322 @@ function stripHtmlToText(html) {
       // Store all products for client-side filtering
       productsCache = data.data;
       
-      // Apply filter
-      var productsToShow = productsCache;
-      if (currentFilter === 'featured') {
-        productsToShow = productsCache.filter(function(p) { return p.is_featured; });
-      } else if (currentFilter === 'sale') {
-        productsToShow = productsCache.filter(function(p) { 
-          return p.sale_price && parseFloat(p.sale_price) < parseFloat(p.price); 
-        });
-      } else if (currentFilter === 'new') {
-        // Show products with "new" tag (manual only)
-        productsToShow = productsCache.filter(function(p) { 
-          return p.tags && p.tags.some(function(tag) { 
-            return tag.toLowerCase() === 'new' || tag.toLowerCase() === 'חדש'; 
-          });
-        });
+      // Initialize toolbar, sidebar, sorting, and view toggle on first load
+      if (!window._zappyToolbarInitialized) {
+        window._zappyToolbarInitialized = true;
+        initProductsToolbar('products-toolbar', 'product-sidebar', 'sort-select', 'sort-control', 'view-toggle', 'sidebar-toggle-btn', 'products-count');
       }
       
-      if (productsToShow.length === 0) {
-        grid.innerHTML = '<div class="empty-cart">' + t.noProducts + '</div>';
-        return;
-      }
-      
-      renderProductsToGrid(grid, productsToShow);
+      applyAllFiltersAndRender(grid);
     } catch (e) {
       console.error('Failed to load products', e);
       grid.innerHTML = '<div class="empty-cart">' + t.errorLoading + '</div>';
+    }
+  }
+  
+  // Central filtering + sorting + render pipeline
+  function applyAllFiltersAndRender(grid) {
+    if (!grid) grid = document.getElementById('zappy-product-grid');
+    if (!grid) return;
+    
+    // Step 1: Apply tab filter (all/featured/new/sale)
+    var productsToShow = productsCache;
+    if (currentFilter === 'featured') {
+      productsToShow = productsCache.filter(function(p) { return p.is_featured; });
+    } else if (currentFilter === 'sale') {
+      productsToShow = productsCache.filter(function(p) {
+        return p.sale_price && parseFloat(p.sale_price) < parseFloat(p.price);
+      });
+    } else if (currentFilter === 'new') {
+      productsToShow = productsCache.filter(function(p) {
+        return p.tags && p.tags.some(function(tag) {
+          return tag.toLowerCase() === 'new' || tag.toLowerCase() === 'חדש';
+        });
+      });
+    }
+    
+    // Step 2: Apply sidebar filters
+    if (sidebarFiltersConfig.enabled) {
+      if (activeSidebarFilters.categories.length > 0) {
+        productsToShow = productsToShow.filter(function(p) {
+          return activeSidebarFilters.categories.includes(p.category_id);
+        });
+      }
+      if (activeSidebarFilters.tags.length > 0) {
+        productsToShow = productsToShow.filter(function(p) {
+          return p.tags && p.tags.some(function(tag) {
+            return activeSidebarFilters.tags.includes(tag);
+          });
+        });
+      }
+      if (activeSidebarFilters.priceMin != null) {
+        productsToShow = productsToShow.filter(function(p) {
+          return parseFloat(p.price) >= activeSidebarFilters.priceMin;
+        });
+      }
+      if (activeSidebarFilters.priceMax != null) {
+        productsToShow = productsToShow.filter(function(p) {
+          return parseFloat(p.price) <= activeSidebarFilters.priceMax;
+        });
+      }
+      if (activeSidebarFilters.sale) {
+        productsToShow = productsToShow.filter(function(p) {
+          return p.sale_price && parseFloat(p.sale_price) < parseFloat(p.price);
+        });
+      }
+    }
+    
+    // Step 3: Apply sorting
+    if (currentSortKey !== 'default') {
+      productsToShow = productsToShow.slice().sort(function(a, b) {
+        switch (currentSortKey) {
+          case 'price_asc': return parseFloat(a.price) - parseFloat(b.price);
+          case 'price_desc': return parseFloat(b.price) - parseFloat(a.price);
+          case 'name_asc': return (a.name || '').localeCompare(b.name || '');
+          case 'name_desc': return (b.name || '').localeCompare(a.name || '');
+          case 'newest': return new Date(b.created_at) - new Date(a.created_at);
+          default: return 0;
+        }
+      });
+    }
+    
+    // Update count
+    var countEl = document.getElementById('products-count');
+    if (countEl) {
+      var countLabel = isRTL ? (productsToShow.length + ' מוצרים') : ('Showing ' + productsToShow.length + ' products');
+      countEl.textContent = countLabel;
+    }
+    
+    if (productsToShow.length === 0) {
+      grid.innerHTML = '<div class="empty-cart">' + t.noProducts + '</div>';
+      return;
+    }
+    
+    renderProductsToGrid(grid, productsToShow);
+  }
+  
+  // Initialize toolbar (sorting, view toggle, sidebar toggle, count)
+  function initProductsToolbar(toolbarId, sidebarId, sortSelectId, sortControlId, viewToggleId, sidebarToggleBtnId, countId) {
+    var toolbar = document.getElementById(toolbarId);
+    if (!toolbar) return;
+    
+    var hasAnyFeature = false;
+    
+    // Sorting
+    if (sortingConfig.enabled && sortingConfig.options && sortingConfig.options.length > 0) {
+      hasAnyFeature = true;
+      var sortControl = document.getElementById(sortControlId);
+      var sortSelect = document.getElementById(sortSelectId);
+      if (sortControl && sortSelect) {
+        sortControl.style.display = '';
+        var sortLabels = {
+          price_asc: isRTL ? 'מחיר: נמוך לגבוה' : 'Price: Low to High',
+          price_desc: isRTL ? 'מחיר: גבוה לנמוך' : 'Price: High to Low',
+          name_asc: isRTL ? 'שם: א-ת' : 'Name: A to Z',
+          name_desc: isRTL ? 'שם: ת-א' : 'Name: Z to A',
+          newest: isRTL ? 'חדש ביותר' : 'Newest First'
+        };
+        sortingConfig.options.forEach(function(opt) {
+          if (sortLabels[opt]) {
+            var option = document.createElement('option');
+            option.value = opt;
+            option.textContent = sortLabels[opt];
+            sortSelect.appendChild(option);
+          }
+        });
+        sortSelect.value = currentSortKey;
+        sortSelect.addEventListener('change', function() {
+          currentSortKey = sortSelect.value;
+          applyAllFiltersAndRender();
+        });
+      }
+    }
+    
+    // View toggle
+    if (viewToggleEnabled) {
+      hasAnyFeature = true;
+      var viewToggle = document.getElementById(viewToggleId);
+      if (viewToggle) {
+        viewToggle.style.display = '';
+        var viewBtns = viewToggle.querySelectorAll('.view-btn');
+        viewBtns.forEach(function(btn) {
+          btn.classList.toggle('active', btn.getAttribute('data-view') === currentViewMode);
+          btn.addEventListener('click', function() {
+            currentViewMode = btn.getAttribute('data-view');
+            localStorage.setItem('zappy_view_mode_' + websiteId, currentViewMode);
+            viewBtns.forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-view') === currentViewMode); });
+            applyAllFiltersAndRender();
+          });
+        });
+      }
+    }
+    
+    // Sidebar filters
+    if (sidebarFiltersConfig.enabled && sidebarFiltersConfig.filters && sidebarFiltersConfig.filters.length > 0) {
+      hasAnyFeature = true;
+      initSidebarFilters(sidebarId, sidebarToggleBtnId);
+    }
+    
+    if (hasAnyFeature) {
+      toolbar.style.display = '';
+    }
+  }
+  
+  // Build and initialize the sidebar filters
+  function initSidebarFilters(sidebarId, toggleBtnId) {
+    var sidebar = document.getElementById(sidebarId);
+    if (!sidebar) return;
+    
+    var filters = sidebarFiltersConfig.filters || [];
+    var html = '';
+    
+    // Close button (visible on mobile)
+    html += '<button class="sidebar-close-btn" id="' + sidebarId + '-close" style="display:none;">&times;</button>';
+    
+    // Category filter
+    if (filters.includes('category')) {
+      var categories = {};
+      productsCache.forEach(function(p) {
+        if (p.category_id && p.category_name) {
+          if (!categories[p.category_id]) categories[p.category_id] = { name: p.category_name, count: 0 };
+          categories[p.category_id].count++;
+        }
+      });
+      var catKeys = Object.keys(categories);
+      if (catKeys.length > 0) {
+        html += '<div class="sidebar-section"><div class="sidebar-section-title">' + (isRTL ? 'קטגוריות' : 'Categories') + '</div>';
+        catKeys.forEach(function(catId) {
+          html += '<label class="sidebar-item"><input type="checkbox" data-filter="category" value="' + catId + '"> ' + categories[catId].name + ' <span class="count">(' + categories[catId].count + ')</span></label>';
+        });
+        html += '</div>';
+      }
+    }
+    
+    // Tags filter
+    if (filters.includes('tags')) {
+      var tagCounts = {};
+      productsCache.forEach(function(p) {
+        if (p.tags && p.tags.length) {
+          p.tags.forEach(function(tag) {
+            tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+          });
+        }
+      });
+      var tagKeys = Object.keys(tagCounts);
+      if (tagKeys.length > 0) {
+        tagKeys.sort();
+        html += '<div class="sidebar-section"><div class="sidebar-section-title">' + (isRTL ? 'תגיות' : 'Tags') + '</div>';
+        tagKeys.forEach(function(tag) {
+          html += '<label class="sidebar-item"><input type="checkbox" data-filter="tag" value="' + tag + '"> ' + tag + ' <span class="count">(' + tagCounts[tag] + ')</span></label>';
+        });
+        html += '</div>';
+      }
+    }
+    
+    // Price range filter
+    if (filters.includes('price')) {
+      var prices = productsCache.map(function(p) { return parseFloat(p.price) || 0; }).filter(function(v) { return v > 0; });
+      if (prices.length > 0) {
+        var minPrice = Math.floor(Math.min.apply(null, prices));
+        var maxPrice = Math.ceil(Math.max.apply(null, prices));
+        html += '<div class="sidebar-section"><div class="sidebar-section-title">' + (isRTL ? 'טווח מחירים' : 'Price Range') + '</div>';
+        html += '<div class="price-range-inputs">';
+        html += '<input type="number" id="' + sidebarId + '-price-min" placeholder="' + (isRTL ? 'מינ' : 'Min') + '" min="' + minPrice + '" max="' + maxPrice + '" value="">';
+        html += '<span>—</span>';
+        html += '<input type="number" id="' + sidebarId + '-price-max" placeholder="' + (isRTL ? 'מקס' : 'Max') + '" min="' + minPrice + '" max="' + maxPrice + '" value="">';
+        html += '</div>';
+        html += '<button class="price-filter-btn" id="' + sidebarId + '-price-btn">' + (isRTL ? 'סנן' : 'Filter') + '</button>';
+        html += '</div>';
+      }
+    }
+    
+    // Sale filter
+    if (filters.includes('sale')) {
+      var saleCount = productsCache.filter(function(p) { return p.sale_price && parseFloat(p.sale_price) < parseFloat(p.price); }).length;
+      if (saleCount > 0) {
+        html += '<div class="sidebar-section"><div class="sidebar-section-title">' + (isRTL ? 'מבצעים' : 'On Sale') + '</div>';
+        html += '<label class="sidebar-item"><input type="checkbox" data-filter="sale"> ' + (isRTL ? 'הצג מוצרים במבצע' : 'Show sale items') + ' <span class="count">(' + saleCount + ')</span></label>';
+        html += '</div>';
+      }
+    }
+    
+    // Clear all link
+    html += '<span class="sidebar-clear" id="' + sidebarId + '-clear">' + (isRTL ? 'נקה סינון' : 'Clear all filters') + '</span>';
+    
+    sidebar.innerHTML = html;
+    sidebar.style.display = '';
+    
+    // Mobile toggle
+    var toggleBtn = document.getElementById(toggleBtnId);
+    var overlay = document.createElement('div');
+    overlay.className = 'sidebar-overlay';
+    overlay.id = sidebarId + '-overlay';
+    sidebar.parentNode.insertBefore(overlay, sidebar);
+    
+    if (toggleBtn) {
+      toggleBtn.style.display = '';
+      toggleBtn.addEventListener('click', function() {
+        sidebar.classList.add('open');
+        overlay.classList.add('active');
+      });
+    }
+    
+    var closeBtn = document.getElementById(sidebarId + '-close');
+    if (closeBtn) {
+      closeBtn.style.display = '';
+    }
+    
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('active');
+    }
+    if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+    overlay.addEventListener('click', closeSidebar);
+    
+    // Category/tag checkbox handlers
+    sidebar.querySelectorAll('input[data-filter="category"]').forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        activeSidebarFilters.categories = Array.from(sidebar.querySelectorAll('input[data-filter="category"]:checked')).map(function(el) { return el.value; });
+        applyAllFiltersAndRender();
+      });
+    });
+    sidebar.querySelectorAll('input[data-filter="tag"]').forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        activeSidebarFilters.tags = Array.from(sidebar.querySelectorAll('input[data-filter="tag"]:checked')).map(function(el) { return el.value; });
+        applyAllFiltersAndRender();
+      });
+    });
+    sidebar.querySelectorAll('input[data-filter="sale"]').forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        activeSidebarFilters.sale = cb.checked;
+        applyAllFiltersAndRender();
+      });
+    });
+    
+    // Price filter button
+    var priceBtnEl = document.getElementById(sidebarId + '-price-btn');
+    if (priceBtnEl) {
+      priceBtnEl.addEventListener('click', function() {
+        var minInput = document.getElementById(sidebarId + '-price-min');
+        var maxInput = document.getElementById(sidebarId + '-price-max');
+        activeSidebarFilters.priceMin = minInput && minInput.value ? parseFloat(minInput.value) : null;
+        activeSidebarFilters.priceMax = maxInput && maxInput.value ? parseFloat(maxInput.value) : null;
+        applyAllFiltersAndRender();
+      });
+    }
+    
+    // Clear all
+    var clearEl = document.getElementById(sidebarId + '-clear');
+    if (clearEl) {
+      clearEl.addEventListener('click', function() {
+        activeSidebarFilters = { categories: [], tags: [], priceMin: null, priceMax: null, sale: false };
+        sidebar.querySelectorAll('input[type="checkbox"]').forEach(function(cb) { cb.checked = false; });
+        var minInput = document.getElementById(sidebarId + '-price-min');
+        var maxInput = document.getElementById(sidebarId + '-price-max');
+        if (minInput) minInput.value = '';
+        if (maxInput) maxInput.value = '';
+        applyAllFiltersAndRender();
+      });
     }
   }
   
@@ -1030,8 +1337,9 @@ function stripHtmlToText(html) {
   
   // Render products to grid
   function renderProductsToGrid(grid, products) {
-    // Update grid class based on layout
-    grid.className = 'product-grid layout-' + productLayout;
+    // Update grid class based on layout + view mode
+    var viewClass = currentViewMode === 'list' ? ' view-list' : '';
+    grid.className = 'product-grid layout-' + productLayout + viewClass;
     
     grid.innerHTML = products.map(function(p) {
       // Check if price should be displayed (default to true if not set)
@@ -1128,10 +1436,13 @@ function stripHtmlToText(html) {
   
   // Initialize filter buttons
   function initFilterButtons() {
-    document.querySelectorAll('.filter-btn').forEach(function(btn) {
+    document.querySelectorAll('.products-main .filter-btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
-        var filter = btn.getAttribute('data-category');
-        loadProductsWithFilter(filter);
+        currentFilter = btn.getAttribute('data-category') || 'all';
+        document.querySelectorAll('.products-main .filter-btn').forEach(function(b) {
+          b.classList.toggle('active', b.getAttribute('data-category') === currentFilter);
+        });
+        applyAllFiltersAndRender();
       });
     });
   }
@@ -4181,7 +4492,15 @@ function buildApiUrlWithLang(path) {
 // Store settings for this section
 let additionalJsProductLayout = 'standard';
 let additionalJsSettingsFetched = false;
-let additionalJsAllProductsLabel = null; // Custom "All Products" label from store settings
+let additionalJsAllProductsLabel = null;
+let additionalJsSidebarFiltersConfig = {};
+let additionalJsSortingConfig = {};
+let additionalJsViewToggleEnabled = true;
+let catCurrentSortKey = 'default';
+let catCurrentViewMode = localStorage.getItem('zappy_view_mode_' + (window.ZAPPY_WEBSITE_ID || '')) || 'grid';
+let catActiveSidebarFilters = { categories: [], tags: [], priceMin: null, priceMax: null, sale: false };
+let catCurrentFilter = 'all';
+let catProductsCache = [];
 
 // Fetch store settings (announcement bar, product layout, etc.)
 // Pass force=true to bypass the cache and re-fetch (e.g., when language changes)
@@ -4224,6 +4543,15 @@ async function fetchAdditionalJsSettings(force) {
           productsDropdown.appendChild(document.createTextNode(data.data.productsMenuLabel + ' '));
           if (arrowSvg) productsDropdown.appendChild(arrowSvg);
         }
+      }
+      if (data.data.sidebarFiltersConfig) {
+        additionalJsSidebarFiltersConfig = data.data.sidebarFiltersConfig;
+      }
+      if (data.data.sortingConfig) {
+        additionalJsSortingConfig = data.data.sortingConfig;
+      }
+      if (data.data.viewToggleEnabled != null) {
+        additionalJsViewToggleEnabled = data.data.viewToggleEnabled;
       }
       // Handle dynamic announcement bar
       handleDynamicAnnouncementBar(data.data.announcementBar);
@@ -4460,11 +4788,12 @@ function stripHtmlToText(html) {
 }
 
 
-function renderProductGrid(grid, products, t, isFeaturedSection) {
+function renderProductGrid(grid, products, t, isFeaturedSection, viewMode) {
   // Update grid class based on layout (only for product grids, not featured section which has its own styling)
   var layout = additionalJsProductLayout || 'standard';
   if (!isFeaturedSection) {
-    grid.className = 'product-grid layout-' + layout;
+    var viewClass = (viewMode === 'list') ? ' view-list' : '';
+    grid.className = 'product-grid layout-' + layout + viewClass;
   }
   
   // Get localized text for UI elements
@@ -4887,6 +5216,7 @@ function showCategoryNotFound(container, t) {
 function renderCategoryPage(container, category, t) {
   const headerContainer = document.getElementById('category-header');
   const productGrid = document.getElementById('zappy-category-products');
+  const isRTL = document.documentElement.dir === 'rtl' || document.body.dir === 'rtl';
   
   // Render category header
   if (headerContainer) {
@@ -4897,55 +5227,280 @@ function renderCategoryPage(container, category, t) {
   }
   
   // Store category products for filtering
-  const categoryProducts = category.products || [];
+  catProductsCache = category.products || [];
   
-  // Render products in this category
-  if (productGrid) {
-    if (categoryProducts.length === 0) {
-      productGrid.innerHTML = '<div class="no-products">' + (t.noProducts || 'No products in this category yet.') + '</div>';
-    } else {
-      renderProductGrid(productGrid, categoryProducts, t, false);
+  // Initialize category toolbar
+  initCategoryToolbar(isRTL, t);
+  
+  applyCategoryFiltersAndRender(productGrid, t);
+  
+  // Setup filter buttons for category products
+  const filterBtns = container.querySelectorAll('.products-main .filter-btn');
+  filterBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      filterBtns.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      catCurrentFilter = btn.getAttribute('data-category') || 'all';
+      applyCategoryFiltersAndRender(productGrid, t);
+    });
+  });
+}
+
+function applyCategoryFiltersAndRender(productGrid, t) {
+  if (!productGrid) productGrid = document.getElementById('zappy-category-products');
+  if (!productGrid) return;
+  
+  var productsToShow = catProductsCache;
+  
+  if (catCurrentFilter === 'featured') {
+    productsToShow = catProductsCache.filter(function(p) { return p.is_featured; });
+  } else if (catCurrentFilter === 'new') {
+    productsToShow = catProductsCache.filter(function(p) {
+      return p.tags && p.tags.some(function(tag) {
+        return tag.toLowerCase() === 'new' || tag.toLowerCase() === 'חדש';
+      });
+    });
+  } else if (catCurrentFilter === 'sale') {
+    productsToShow = catProductsCache.filter(function(p) {
+      return (p.sale_price && parseFloat(p.sale_price) < parseFloat(p.price)) ||
+             (p.tags && p.tags.some(function(tag) {
+               return tag.toLowerCase() === 'sale' || tag.toLowerCase() === 'מבצע';
+             }));
+    });
+  }
+  
+  // Apply sidebar filters
+  if (additionalJsSidebarFiltersConfig.enabled) {
+    if (catActiveSidebarFilters.tags.length > 0) {
+      productsToShow = productsToShow.filter(function(p) {
+        return p.tags && p.tags.some(function(tag) { return catActiveSidebarFilters.tags.includes(tag); });
+      });
+    }
+    if (catActiveSidebarFilters.priceMin != null) {
+      productsToShow = productsToShow.filter(function(p) { return parseFloat(p.price) >= catActiveSidebarFilters.priceMin; });
+    }
+    if (catActiveSidebarFilters.priceMax != null) {
+      productsToShow = productsToShow.filter(function(p) { return parseFloat(p.price) <= catActiveSidebarFilters.priceMax; });
+    }
+    if (catActiveSidebarFilters.sale) {
+      productsToShow = productsToShow.filter(function(p) { return p.sale_price && parseFloat(p.sale_price) < parseFloat(p.price); });
     }
   }
   
-  // Setup filter buttons for category products (same as products page)
-  const filterBtns = container.querySelectorAll('.filter-btn');
-  filterBtns.forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      // Update active state
-      filterBtns.forEach(function(b) { b.classList.remove('active'); });
-      btn.classList.add('active');
-      
-      const filterType = btn.getAttribute('data-category');
-      let filteredProducts = categoryProducts;
-      
-      if (filterType === 'featured') {
-        filteredProducts = categoryProducts.filter(function(p) { return p.is_featured; });
-      } else if (filterType === 'new') {
-        filteredProducts = categoryProducts.filter(function(p) { 
-          return p.tags && p.tags.some(function(tag) { 
-            return tag.toLowerCase() === 'new' || tag.toLowerCase() === 'חדש'; 
-          }); 
-        });
-      } else if (filterType === 'sale') {
-        filteredProducts = categoryProducts.filter(function(p) { 
-          return (p.sale_price && parseFloat(p.sale_price) < parseFloat(p.price)) ||
-                 (p.tags && p.tags.some(function(tag) { 
-                   return tag.toLowerCase() === 'sale' || tag.toLowerCase() === 'מבצע'; 
-                 }));
-        });
-      }
-      // 'all' shows all products
-      
-      if (productGrid) {
-        if (filteredProducts.length === 0) {
-          productGrid.innerHTML = '<div class="no-products">' + (t.noProducts || 'No products found.') + '</div>';
-        } else {
-          renderProductGrid(productGrid, filteredProducts, t, false);
-        }
+  // Apply sorting
+  if (catCurrentSortKey !== 'default') {
+    productsToShow = productsToShow.slice().sort(function(a, b) {
+      switch (catCurrentSortKey) {
+        case 'price_asc': return parseFloat(a.price) - parseFloat(b.price);
+        case 'price_desc': return parseFloat(b.price) - parseFloat(a.price);
+        case 'name_asc': return (a.name || '').localeCompare(b.name || '');
+        case 'name_desc': return (b.name || '').localeCompare(a.name || '');
+        case 'newest': return new Date(b.created_at) - new Date(a.created_at);
+        default: return 0;
       }
     });
+  }
+  
+  // Update count
+  var countEl = document.getElementById('category-products-count');
+  var isRTL = document.documentElement.dir === 'rtl' || document.body.dir === 'rtl';
+  if (countEl) {
+    countEl.textContent = isRTL ? (productsToShow.length + ' מוצרים') : ('Showing ' + productsToShow.length + ' products');
+  }
+  
+  if (productsToShow.length === 0) {
+    productGrid.innerHTML = '<div class="no-products">' + (t.noProducts || 'No products found.') + '</div>';
+    return;
+  }
+  
+  renderProductGrid(productGrid, productsToShow, t, false, catCurrentViewMode);
+}
+
+function initCategoryToolbar(isRTL, t) {
+  var toolbar = document.getElementById('category-toolbar');
+  if (!toolbar) return;
+  
+  var hasAnyFeature = false;
+  
+  // Sorting
+  if (additionalJsSortingConfig.enabled && additionalJsSortingConfig.options && additionalJsSortingConfig.options.length > 0) {
+    hasAnyFeature = true;
+    var sortControl = document.getElementById('cat-sort-control');
+    var sortSelect = document.getElementById('cat-sort-select');
+    if (sortControl && sortSelect) {
+      sortControl.style.display = '';
+      var sortLabels = {
+        price_asc: isRTL ? 'מחיר: נמוך לגבוה' : 'Price: Low to High',
+        price_desc: isRTL ? 'מחיר: גבוה לנמוך' : 'Price: High to Low',
+        name_asc: isRTL ? 'שם: א-ת' : 'Name: A to Z',
+        name_desc: isRTL ? 'שם: ת-א' : 'Name: Z to A',
+        newest: isRTL ? 'חדש ביותר' : 'Newest First'
+      };
+      additionalJsSortingConfig.options.forEach(function(opt) {
+        if (sortLabels[opt]) {
+          var option = document.createElement('option');
+          option.value = opt;
+          option.textContent = sortLabels[opt];
+          sortSelect.appendChild(option);
+        }
+      });
+      sortSelect.addEventListener('change', function() {
+        catCurrentSortKey = sortSelect.value;
+        applyCategoryFiltersAndRender(null, t);
+      });
+    }
+  }
+  
+  // View toggle
+  if (additionalJsViewToggleEnabled) {
+    hasAnyFeature = true;
+    var viewToggle = document.getElementById('cat-view-toggle');
+    if (viewToggle) {
+      viewToggle.style.display = '';
+      var viewBtns = viewToggle.querySelectorAll('.view-btn');
+      viewBtns.forEach(function(btn) {
+        btn.classList.toggle('active', btn.getAttribute('data-view') === catCurrentViewMode);
+        btn.addEventListener('click', function() {
+          catCurrentViewMode = btn.getAttribute('data-view');
+          localStorage.setItem('zappy_view_mode_' + (window.ZAPPY_WEBSITE_ID || ''), catCurrentViewMode);
+          viewBtns.forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-view') === catCurrentViewMode); });
+          applyCategoryFiltersAndRender(null, t);
+        });
+      });
+    }
+  }
+  
+  // Sidebar filters (tags, price, sale - not categories since we're already in a category)
+  if (additionalJsSidebarFiltersConfig.enabled && additionalJsSidebarFiltersConfig.filters && additionalJsSidebarFiltersConfig.filters.length > 0) {
+    hasAnyFeature = true;
+    initCategorySidebarFilters(isRTL, t);
+  }
+  
+  if (hasAnyFeature) {
+    toolbar.style.display = '';
+  }
+}
+
+function initCategorySidebarFilters(isRTL, t) {
+  var sidebar = document.getElementById('category-sidebar');
+  if (!sidebar) return;
+  
+  var filters = (additionalJsSidebarFiltersConfig.filters || []).filter(function(f) { return f !== 'category'; });
+  if (filters.length === 0) return;
+  
+  var html = '<button class="sidebar-close-btn" id="category-sidebar-close" style="display:none;">&times;</button>';
+  
+  // Tags filter
+  if (filters.includes('tags')) {
+    var tagCounts = {};
+    catProductsCache.forEach(function(p) {
+      if (p.tags && p.tags.length) {
+        p.tags.forEach(function(tag) { tagCounts[tag] = (tagCounts[tag] || 0) + 1; });
+      }
+    });
+    var tagKeys = Object.keys(tagCounts);
+    if (tagKeys.length > 0) {
+      tagKeys.sort();
+      html += '<div class="sidebar-section"><div class="sidebar-section-title">' + (isRTL ? 'תגיות' : 'Tags') + '</div>';
+      tagKeys.forEach(function(tag) {
+        html += '<label class="sidebar-item"><input type="checkbox" data-filter="tag" value="' + tag + '"> ' + tag + ' <span class="count">(' + tagCounts[tag] + ')</span></label>';
+      });
+      html += '</div>';
+    }
+  }
+  
+  // Price range filter
+  if (filters.includes('price')) {
+    var prices = catProductsCache.map(function(p) { return parseFloat(p.price) || 0; }).filter(function(v) { return v > 0; });
+    if (prices.length > 0) {
+      html += '<div class="sidebar-section"><div class="sidebar-section-title">' + (isRTL ? 'טווח מחירים' : 'Price Range') + '</div>';
+      html += '<div class="price-range-inputs">';
+      html += '<input type="number" id="cat-sidebar-price-min" placeholder="' + (isRTL ? 'מינ' : 'Min') + '">';
+      html += '<span>—</span>';
+      html += '<input type="number" id="cat-sidebar-price-max" placeholder="' + (isRTL ? 'מקס' : 'Max') + '">';
+      html += '</div>';
+      html += '<button class="price-filter-btn" id="cat-sidebar-price-btn">' + (isRTL ? 'סנן' : 'Filter') + '</button>';
+      html += '</div>';
+    }
+  }
+  
+  // Sale filter
+  if (filters.includes('sale')) {
+    var saleCount = catProductsCache.filter(function(p) { return p.sale_price && parseFloat(p.sale_price) < parseFloat(p.price); }).length;
+    if (saleCount > 0) {
+      html += '<div class="sidebar-section"><div class="sidebar-section-title">' + (isRTL ? 'מבצעים' : 'On Sale') + '</div>';
+      html += '<label class="sidebar-item"><input type="checkbox" data-filter="sale"> ' + (isRTL ? 'הצג מוצרים במבצע' : 'Show sale items') + ' <span class="count">(' + saleCount + ')</span></label>';
+      html += '</div>';
+    }
+  }
+  
+  html += '<span class="sidebar-clear" id="category-sidebar-clear">' + (isRTL ? 'נקה סינון' : 'Clear all filters') + '</span>';
+  
+  sidebar.innerHTML = html;
+  sidebar.style.display = '';
+  
+  // Mobile toggle
+  var toggleBtn = document.getElementById('cat-sidebar-toggle-btn');
+  var overlay = document.createElement('div');
+  overlay.className = 'sidebar-overlay';
+  overlay.id = 'category-sidebar-overlay';
+  sidebar.parentNode.insertBefore(overlay, sidebar);
+  
+  if (toggleBtn) {
+    toggleBtn.style.display = '';
+    toggleBtn.addEventListener('click', function() {
+      sidebar.classList.add('open');
+      overlay.classList.add('active');
+    });
+  }
+  
+  var closeBtn = document.getElementById('category-sidebar-close');
+  if (closeBtn) closeBtn.style.display = '';
+  
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('active');
+  }
+  if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+  overlay.addEventListener('click', closeSidebar);
+  
+  // Event handlers
+  sidebar.querySelectorAll('input[data-filter="tag"]').forEach(function(cb) {
+    cb.addEventListener('change', function() {
+      catActiveSidebarFilters.tags = Array.from(sidebar.querySelectorAll('input[data-filter="tag"]:checked')).map(function(el) { return el.value; });
+      applyCategoryFiltersAndRender(null, t);
+    });
   });
+  sidebar.querySelectorAll('input[data-filter="sale"]').forEach(function(cb) {
+    cb.addEventListener('change', function() {
+      catActiveSidebarFilters.sale = cb.checked;
+      applyCategoryFiltersAndRender(null, t);
+    });
+  });
+  
+  var priceBtnEl = document.getElementById('cat-sidebar-price-btn');
+  if (priceBtnEl) {
+    priceBtnEl.addEventListener('click', function() {
+      var minInput = document.getElementById('cat-sidebar-price-min');
+      var maxInput = document.getElementById('cat-sidebar-price-max');
+      catActiveSidebarFilters.priceMin = minInput && minInput.value ? parseFloat(minInput.value) : null;
+      catActiveSidebarFilters.priceMax = maxInput && maxInput.value ? parseFloat(maxInput.value) : null;
+      applyCategoryFiltersAndRender(null, t);
+    });
+  }
+  
+  var clearEl = document.getElementById('category-sidebar-clear');
+  if (clearEl) {
+    clearEl.addEventListener('click', function() {
+      catActiveSidebarFilters = { categories: [], tags: [], priceMin: null, priceMax: null, sale: false };
+      sidebar.querySelectorAll('input[type="checkbox"]').forEach(function(cb) { cb.checked = false; });
+      var minInput = document.getElementById('cat-sidebar-price-min');
+      var maxInput = document.getElementById('cat-sidebar-price-max');
+      if (minInput) minInput.value = '';
+      if (maxInput) maxInput.value = '';
+      applyCategoryFiltersAndRender(null, t);
+    });
+  }
 }
 
 function showProductNotFound(container, t) {
