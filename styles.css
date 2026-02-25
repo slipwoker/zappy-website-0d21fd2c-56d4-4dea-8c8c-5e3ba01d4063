@@ -5520,6 +5520,12 @@ body.accessibility-widget-visible ._access-menu {
 
 
 
+
+
+
+
+
+
 /* ==ZAPPY V2 E-COMMERCE THEME CSS== */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /* V2 E-COMMERCE CSS - Clean V2 Variables Only                                  */
@@ -5849,12 +5855,13 @@ main.page-container.ecommerce-page,
   .sidebar-overlay.active { display: block; }
   .product-sidebar .sidebar-mobile-close { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: none; background: rgba(0,0,0,0.05); border-radius: 50%; cursor: pointer; color: var(--text-dark); font-size: 20px; line-height: 1; flex-shrink: 0; }
   .product-sidebar .sidebar-mobile-close:hover { background: var(--border-light); }
-  .product-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; margin-top: 16px !important; }
-  .product-grid .product-card img { height: 140px; }
-  .product-grid .product-card h3 { font-size: 13px; margin: 8px 0 4px; height: auto; -webkit-line-clamp: 2; }
-  .product-grid .product-card p { font-size: 11px !important; -webkit-line-clamp: 2 !important; margin: 0 0 4px 0; }
-  .product-grid .product-card .price { font-size: 14px; padding-top: 4px; }
-  .product-grid .product-card .add-to-cart { padding: 8px 12px; font-size: 12px; }
+  .products-main .product-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; margin-top: 12px !important; }
+  .products-main .product-grid .product-card { padding: 8px !important; }
+  .products-main .product-grid .product-card img { height: 120px; }
+  .products-main .product-grid .product-card h3 { font-size: 12px; margin: 6px 0 2px; height: auto; -webkit-line-clamp: 2; }
+  .products-main .product-grid .product-card p { font-size: 10px !important; -webkit-line-clamp: 1 !important; margin: 0 0 2px 0; }
+  .products-main .product-grid .product-card .price { font-size: 13px; padding-top: 2px; }
+  .products-main .product-grid .product-card .add-to-cart { padding: 6px 10px; font-size: 11px; }
   .product-grid.view-list { display: flex !important; flex-direction: column !important; gap: 10px !important; }
   .product-grid.view-list .product-card { flex-direction: row; flex-wrap: nowrap; align-items: center; overflow: visible; max-height: none; padding: 10px !important; gap: 10px; }
   .product-grid.view-list .product-card .product-card-link { flex: 1 1 0%; flex-direction: row; gap: 10px; min-width: 0; }
