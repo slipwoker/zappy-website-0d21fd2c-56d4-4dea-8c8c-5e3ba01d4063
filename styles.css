@@ -5472,6 +5472,12 @@ body.accessibility-widget-visible ._access-menu {
 
 
 
+
+
+
+
+
+
 /* ==ZAPPY V2 E-COMMERCE THEME CSS== */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /* V2 E-COMMERCE CSS - Clean V2 Variables Only                                  */
@@ -5726,6 +5732,7 @@ main.page-container.ecommerce-page,
 
 /* Toolbar */
 .products-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 10px 0; border-bottom: 1px solid var(--border-light); margin-bottom: 8px; }
+.toolbar-controls { display: flex; align-items: center; gap: 12px; }
 .toolbar-left, .toolbar-right { display: flex; align-items: center; gap: 12px; }
 .products-count { font-size: 13px; color: var(--text-dark); opacity: 0.7; }
 .sidebar-toggle-btn { display: none; align-items: center; gap: 6px; padding: 7px 14px; border: 1px solid var(--border-light); border-radius: 8px; background: var(--bg-light); cursor: pointer; color: var(--text-dark); font-size: 13px; transition: border-color 0.2s; }
@@ -5784,22 +5791,37 @@ main.page-container.ecommerce-page,
 
 @media (max-width: 768px) {
   .products-layout { flex-direction: column; }
-  .product-sidebar { position: fixed; top: 0; bottom: 0; left: 0; width: 280px; z-index: 1000; background: var(--bg-light); padding: 20px; padding-top: calc(var(--total-header-height, 80px) + 10px); overflow-y: auto; transform: translateX(-100%); transition: transform 0.3s ease; box-shadow: 2px 0 12px rgba(0,0,0,0.15); max-height: none; }
-  [dir="rtl"] .product-sidebar { transform: translateX(100%); right: 0; left: auto; box-shadow: -2px 0 12px rgba(0,0,0,0.15); }
+  .products-toolbar { flex-direction: column; gap: 6px; padding: 8px 0; }
+  .toolbar-controls { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .products-count { display: block; width: 100%; text-align: center; font-size: 12px; padding-top: 4px; }
+  .sidebar-toggle-btn { display: flex !important; flex: 1; justify-content: center; padding: 8px 10px !important; font-size: 12px !important; }
+  .sort-control { flex: 1; }
+  .sort-control select { width: 100%; font-size: 12px !important; padding: 8px 24px 8px 10px !important; }
+  [dir="rtl"] .sort-control select { padding: 8px 10px 8px 24px !important; }
+  .view-toggle { flex-shrink: 0; }
+  .view-btn { padding: 6px 8px !important; }
+  .product-sidebar { position: fixed; top: 0; bottom: 0; left: 0; right: 0; width: 100%; z-index: 1000; background: var(--bg-light); padding: 20px; padding-top: calc(var(--total-header-height, 80px) + 10px); overflow-y: auto; transform: translateX(-100%); transition: transform 0.3s ease; box-shadow: none; max-height: none; }
+  [dir="rtl"] .product-sidebar { transform: translateX(100%); right: 0; left: auto; }
   .product-sidebar.open { transform: translateX(0); }
   .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 999; }
   .sidebar-overlay.active { display: block; }
-  .sidebar-toggle-btn { display: flex !important; }
   .product-sidebar .sidebar-mobile-close { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: none; background: rgba(0,0,0,0.05); border-radius: 50%; cursor: pointer; color: var(--text-dark); font-size: 20px; line-height: 1; flex-shrink: 0; }
   .product-sidebar .sidebar-mobile-close:hover { background: var(--border-light); }
-  .product-grid.view-list .product-card { flex-direction: column; overflow: visible; }
-  .product-grid.view-list .product-card .product-card-link { flex-direction: column; gap: 0; width: 100%; }
-  .product-grid.view-list .product-card img, .product-grid.view-list .product-card .no-image-placeholder { width: 100%; min-width: unset; height: 180px; border-radius: 8px 8px 0 0; }
-  .product-grid.view-list .product-card .card-content { padding: 12px 0; }
-  .product-grid.view-list .product-card h3 { font-size: 15px; margin: 0 0 4px 0; }
-  .product-grid.view-list .product-card p { font-size: 13px !important; -webkit-line-clamp: 2 !important; margin: 0 0 8px 0; }
-  .product-grid.view-list .product-card .price { font-size: 15px; padding-top: 0; }
-  .product-grid.view-list .product-card .add-to-cart { position: static; width: 100%; margin-top: 0; padding: 10px; font-size: 14px; }
+  .product-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; margin-top: 16px !important; }
+  .product-grid .product-card img { height: 140px; }
+  .product-grid .product-card h3 { font-size: 13px; margin: 8px 0 4px; height: auto; -webkit-line-clamp: 2; }
+  .product-grid .product-card p { font-size: 11px !important; -webkit-line-clamp: 2 !important; margin: 0 0 4px 0; }
+  .product-grid .product-card .price { font-size: 14px; padding-top: 4px; }
+  .product-grid .product-card .add-to-cart { padding: 8px 12px; font-size: 12px; }
+  .product-grid.view-list { display: flex !important; flex-direction: column !important; gap: 10px !important; }
+  .product-grid.view-list .product-card { flex-direction: row; overflow: visible; max-height: none; }
+  .product-grid.view-list .product-card .product-card-link { flex-direction: row; gap: 12px; width: 100%; min-width: 0; }
+  .product-grid.view-list .product-card img, .product-grid.view-list .product-card .no-image-placeholder { width: 100px; min-width: 100px; height: 100px; border-radius: 8px; object-fit: contain; }
+  .product-grid.view-list .product-card .card-content { display: flex; flex-direction: column; flex: 1; min-width: 0; padding: 2px 0; }
+  .product-grid.view-list .product-card h3 { font-size: 14px; margin: 0 0 2px 0; -webkit-line-clamp: 2; height: auto; }
+  .product-grid.view-list .product-card p { font-size: 12px !important; -webkit-line-clamp: 1 !important; margin: 0 0 4px 0; }
+  .product-grid.view-list .product-card .price { font-size: 14px; margin-top: auto; padding-top: 2px; }
+  .product-grid.view-list .product-card .add-to-cart { position: static; width: auto; margin: 0; padding: 6px 14px; font-size: 12px; align-self: flex-end; flex-shrink: 0; }
 }
 
 /* Cart */
