@@ -557,6 +557,8 @@ window.onload = function() {
 ;
 
 ;
+
+;
 /* ==ZAPPY E-COMMERCE JS START== */
 // E-commerce functionality
 (function() {
@@ -1178,9 +1180,6 @@ function stripHtmlToText(html) {
     var html = '';
     var currency = isRTL ? '₪' : '$';
     
-    // Mobile close button (hidden on desktop, shown via CSS on mobile)
-    html += '<button class="sidebar-close-btn" id="' + sidebarId + '-close" style="display:none;">&times;</button>';
-    
     // Sidebar header with title and clear button
     html += '<div class="sidebar-header"><span class="sidebar-title">' + (isRTL ? 'סינון' : 'Filters') + '</span>';
     html += '<button class="sidebar-clear-btn" id="' + sidebarId + '-clear" title="' + (isRTL ? 'נקה הכל' : 'Clear all') + '">' + (isRTL ? 'נקה הכל' : 'Clear all') + '</button></div>';
@@ -1286,14 +1285,10 @@ function stripHtmlToText(html) {
       });
     }
     
-    var closeBtn = document.getElementById(sidebarId + '-close');
-    if (closeBtn) closeBtn.style.display = '';
-    
     function closeSidebar() {
       sidebar.classList.remove('open');
       overlay.classList.remove('active');
     }
-    if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
     overlay.addEventListener('click', closeSidebar);
     
     // Category/tag checkbox handlers
@@ -1442,39 +1437,39 @@ function stripHtmlToText(html) {
       var priceHtml = showPrice ? '<div class="price">' + displayPrice + '</div>' + pricePerUnitHtml : '';
       
       if (productLayout === 'compact') {
-        // Compact: image, name, price only
         cardContent = tagsHtml +
           '<a href="/product/' + (p.slug || p.id) + '" class="product-card-link">' +
             imageHtml +
-            '<h3>' + p.name + '</h3>' +
-            priceHtml +
+            '<div class="card-content">' +
+              '<h3>' + p.name + '</h3>' +
+              priceHtml +
+            '</div>' +
           '</a>';
       } else if (productLayout === 'detailed') {
-        // Detailed: image, name, full description, price, action button
-        // Strip HTML from rich text description and let CSS line-clamp handle truncation
         var detailedDesc = stripHtmlToText(p.description || '');
-        // In catalog mode, show "View Details" link instead of "Add to Cart" button
         var actionButton = isCatalogMode
           ? '<a href="/product/' + (p.slug || p.id) + '" class="add-to-cart view-details-btn">' + localizedViewDetails + '</a>'
           : '<button class="add-to-cart" onclick="event.stopPropagation(); window.zappyHandleAddToCart(' + JSON.stringify(p).replace(/"/g, '&quot;') + ')">' + localizedAddToCart + '</button>';
         cardContent = tagsHtml +
           '<a href="/product/' + (p.slug || p.id) + '" class="product-card-link">' +
             imageHtml +
-            '<h3>' + p.name + '</h3>' +
-            '<p>' + detailedDesc + '</p>' +
-            priceHtml +
+            '<div class="card-content">' +
+              '<h3>' + p.name + '</h3>' +
+              '<p>' + detailedDesc + '</p>' +
+              priceHtml +
+            '</div>' +
           '</a>' +
           actionButton;
       } else {
-        // Standard (default): image, name, short description, price
-        // Strip HTML from rich text description and let CSS line-clamp handle truncation
         var standardDesc = stripHtmlToText(p.description || '');
         cardContent = tagsHtml +
           '<a href="/product/' + (p.slug || p.id) + '" class="product-card-link">' +
             imageHtml +
-            '<h3>' + p.name + '</h3>' +
-            '<p>' + standardDesc + '</p>' +
-            priceHtml +
+            '<div class="card-content">' +
+              '<h3>' + p.name + '</h3>' +
+              '<p>' + standardDesc + '</p>' +
+              priceHtml +
+            '</div>' +
           '</a>';
       }
       
@@ -4891,39 +4886,39 @@ function renderProductGrid(grid, products, t, isFeaturedSection, viewMode) {
     var priceHtml = showPrice ? '<div class="price">' + displayPrice + '</div>' + pricePerUnitHtml : '';
     
     if (layout === 'compact') {
-      // Compact: image, name, price only
       cardContent = tagsHtml +
         '<a href="/product/' + (p.slug || p.id) + '" class="product-card-link">' +
           imageHtml +
-          '<h3>' + p.name + '</h3>' +
-          priceHtml +
+          '<div class="card-content">' +
+            '<h3>' + p.name + '</h3>' +
+            priceHtml +
+          '</div>' +
         '</a>';
     } else if (layout === 'detailed') {
-      // Detailed: image, name, full description, price, action button
-      // Strip HTML from rich text description and let CSS line-clamp handle truncation
       var detailedDesc = stripHtmlToText(p.description || '');
-      // In catalog mode, show "View Details" link instead of "Add to Cart" button
       var actionButton = isCatalogMode
         ? '<a href="/product/' + (p.slug || p.id) + '" class="add-to-cart view-details-btn">' + localizedViewDetails + '</a>'
         : '<button class="add-to-cart" onclick="event.stopPropagation(); window.zappyHandleAddToCart(' + JSON.stringify(p).replace(/"/g, '&quot;') + ')">' + localizedAddToCart + '</button>';
       cardContent = tagsHtml +
         '<a href="/product/' + (p.slug || p.id) + '" class="product-card-link">' +
           imageHtml +
-          '<h3>' + p.name + '</h3>' +
-          '<p>' + detailedDesc + '</p>' +
-          priceHtml +
+          '<div class="card-content">' +
+            '<h3>' + p.name + '</h3>' +
+            '<p>' + detailedDesc + '</p>' +
+            priceHtml +
+          '</div>' +
         '</a>' +
         actionButton;
     } else {
-      // Standard (default): image, name, short description, price
-      // Strip HTML from rich text description and let CSS line-clamp handle truncation
       var standardDesc = stripHtmlToText(p.description || '');
       cardContent = tagsHtml +
         '<a href="/product/' + (p.slug || p.id) + '" class="product-card-link">' +
           imageHtml +
-          '<h3>' + p.name + '</h3>' +
-          '<p>' + standardDesc + '</p>' +
-          priceHtml +
+          '<div class="card-content">' +
+            '<h3>' + p.name + '</h3>' +
+            '<p>' + standardDesc + '</p>' +
+            priceHtml +
+          '</div>' +
         '</a>';
     }
     
@@ -5438,8 +5433,8 @@ function initCategorySidebarFilters(isRTL, t) {
   if (filters.length === 0) return;
   var currency = isRTL ? '₪' : '$';
   
-  var html = '<button class="sidebar-close-btn" id="category-sidebar-close" style="display:none;">&times;</button>';
-  
+  var html = '';
+
   // Sidebar header with title and clear button
   html += '<div class="sidebar-header"><span class="sidebar-title">' + (isRTL ? 'סינון' : 'Filters') + '</span>';
   html += '<button class="sidebar-clear-btn" id="category-sidebar-clear" title="' + (isRTL ? 'נקה הכל' : 'Clear all') + '">' + (isRTL ? 'נקה הכל' : 'Clear all') + '</button></div>';
@@ -5522,14 +5517,10 @@ function initCategorySidebarFilters(isRTL, t) {
     });
   }
   
-  var closeBtn = document.getElementById('category-sidebar-close');
-  if (closeBtn) closeBtn.style.display = '';
-  
   function closeSidebar() {
     sidebar.classList.remove('open');
     overlay.classList.remove('active');
   }
-  if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
   overlay.addEventListener('click', closeSidebar);
   
   // Event handlers
