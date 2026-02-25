@@ -5484,6 +5484,12 @@ body.accessibility-widget-visible ._access-menu {
 
 
 
+
+
+
+
+
+
 /* ==ZAPPY V2 E-COMMERCE THEME CSS== */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /* V2 E-COMMERCE CSS - Clean V2 Variables Only                                  */
@@ -5797,10 +5803,10 @@ main.page-container.ecommerce-page,
 @media (max-width: 768px) {
   .products-layout { flex-direction: column; }
   .products-toolbar { flex-wrap: wrap; gap: 6px; padding: 8px 0; }
-  .toolbar-left { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; order: 1; }
-  .toolbar-right { width: 100%; order: 2; }
-  .toolbar-right .products-count { display: block; width: 100%; text-align: center; font-size: 12px; }
-  .sidebar-toggle-btn { display: flex !important; flex: 1; justify-content: center; padding: 8px 10px !important; font-size: 12px !important; }
+  .sidebar-toggle-btn { display: flex !important; order: 0; padding: 8px 10px !important; font-size: 12px !important; }
+  .toolbar-left { order: 2; width: 100%; }
+  .toolbar-left .products-count { display: block; text-align: center; font-size: 12px; }
+  .toolbar-right { order: 1; display: flex; gap: 8px; }
   .sort-control { flex: 1; }
   .sort-control select { width: 100%; font-size: 12px !important; padding: 8px 24px 8px 10px !important; }
   [dir="rtl"] .sort-control select { padding: 8px 10px 8px 24px !important; }
