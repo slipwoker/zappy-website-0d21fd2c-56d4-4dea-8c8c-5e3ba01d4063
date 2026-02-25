@@ -5502,6 +5502,12 @@ body.accessibility-widget-visible ._access-menu {
 
 
 
+
+
+
+
+
+
 /* ==ZAPPY V2 E-COMMERCE THEME CSS== */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /* V2 E-COMMERCE CSS - Clean V2 Variables Only                                  */
@@ -5845,7 +5851,7 @@ main.page-container.ecommerce-page,
   .product-grid.view-list .product-card h3 { font-size: 14px; margin: 0 0 2px 0; -webkit-line-clamp: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block !important; height: auto; }
   .product-grid.view-list .product-card p { font-size: 11px !important; -webkit-line-clamp: 1 !important; margin: 0 0 2px 0; }
   .product-grid.view-list .product-card .price { font-size: 13px; margin-top: auto; padding-top: 2px; }
-  .product-grid.view-list .product-card .add-to-cart { flex: 0 0 auto; position: static; padding: 6px 12px; font-size: 11px; margin: 0; white-space: nowrap; align-self: center; }
+  .product-grid.view-list .product-card .add-to-cart { flex: 0 0 auto; position: static; padding: 6px 12px; font-size: 11px; margin: 0; white-space: nowrap; align-self: flex-end; }
 }
 
 /* Cart */
