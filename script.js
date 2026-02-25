@@ -565,6 +565,8 @@ window.onload = function() {
 ;
 
 ;
+
+;
 /* ==ZAPPY E-COMMERCE JS START== */
 // E-commerce functionality
 (function() {
@@ -1100,8 +1102,9 @@ function stripHtmlToText(html) {
           name_desc: isRTL ? 'שם: ת-א' : 'Name: Z to A',
           newest: isRTL ? 'חדש ביותר' : 'Newest First'
         };
-        sortingConfig.options.forEach(function(opt) {
-          if (sortLabels[opt]) {
+        var sortOrder = ['popularity', 'price_asc', 'price_desc', 'name_asc', 'name_desc', 'newest'];
+        sortOrder.forEach(function(opt) {
+          if (sortingConfig.options.includes(opt) && sortLabels[opt]) {
             var option = document.createElement('option');
             option.value = opt;
             option.textContent = sortLabels[opt];
@@ -1188,9 +1191,12 @@ function stripHtmlToText(html) {
     var html = '';
     var currency = isRTL ? '₪' : '$';
     
-    // Sidebar header with title and clear button
+    // Sidebar header with title, clear button, and mobile close button
     html += '<div class="sidebar-header"><span class="sidebar-title">' + (isRTL ? 'סינון' : 'Filters') + '</span>';
-    html += '<button class="sidebar-clear-btn" id="' + sidebarId + '-clear" title="' + (isRTL ? 'נקה הכל' : 'Clear all') + '">' + (isRTL ? 'נקה הכל' : 'Clear all') + '</button></div>';
+    html += '<div class="sidebar-header-actions">';
+    html += '<button class="sidebar-clear-btn" id="' + sidebarId + '-clear" title="' + (isRTL ? 'נקה הכל' : 'Clear all') + '">' + (isRTL ? 'נקה הכל' : 'Clear all') + '</button>';
+    html += '<button class="sidebar-mobile-close" id="' + sidebarId + '-mobile-close" title="' + (isRTL ? 'סגור' : 'Close') + '">&times;</button>';
+    html += '</div></div>';
     
     // Category filter
     if (filters.includes('category')) {
@@ -1298,6 +1304,8 @@ function stripHtmlToText(html) {
       overlay.classList.remove('active');
     }
     overlay.addEventListener('click', closeSidebar);
+    var mobileCloseBtn = document.getElementById(sidebarId + '-mobile-close');
+    if (mobileCloseBtn) mobileCloseBtn.addEventListener('click', closeSidebar);
     
     // Category/tag checkbox handlers
     sidebar.querySelectorAll('input[data-filter="category"]').forEach(function(cb) {
@@ -5357,8 +5365,9 @@ function initCategoryToolbar(isRTL, t) {
         name_desc: isRTL ? 'שם: ת-א' : 'Name: Z to A',
         newest: isRTL ? 'חדש ביותר' : 'Newest First'
       };
-      additionalJsSortingConfig.options.forEach(function(opt) {
-        if (sortLabels[opt]) {
+      var catSortOrder = ['popularity', 'price_asc', 'price_desc', 'name_asc', 'name_desc', 'newest'];
+      catSortOrder.forEach(function(opt) {
+        if (additionalJsSortingConfig.options.includes(opt) && sortLabels[opt]) {
           var option = document.createElement('option');
           option.value = opt;
           option.textContent = sortLabels[opt];
@@ -5445,9 +5454,12 @@ function initCategorySidebarFilters(isRTL, t) {
   
   var html = '';
 
-  // Sidebar header with title and clear button
+  // Sidebar header with title, clear button, and mobile close button
   html += '<div class="sidebar-header"><span class="sidebar-title">' + (isRTL ? 'סינון' : 'Filters') + '</span>';
-  html += '<button class="sidebar-clear-btn" id="category-sidebar-clear" title="' + (isRTL ? 'נקה הכל' : 'Clear all') + '">' + (isRTL ? 'נקה הכל' : 'Clear all') + '</button></div>';
+  html += '<div class="sidebar-header-actions">';
+  html += '<button class="sidebar-clear-btn" id="category-sidebar-clear" title="' + (isRTL ? 'נקה הכל' : 'Clear all') + '">' + (isRTL ? 'נקה הכל' : 'Clear all') + '</button>';
+  html += '<button class="sidebar-mobile-close" id="category-sidebar-mobile-close" title="' + (isRTL ? 'סגור' : 'Close') + '">&times;</button>';
+  html += '</div></div>';
   
   // Brand filter
   if (filters.includes('brand')) {
@@ -5532,6 +5544,8 @@ function initCategorySidebarFilters(isRTL, t) {
     overlay.classList.remove('active');
   }
   overlay.addEventListener('click', closeSidebar);
+  var catMobileCloseBtn = document.getElementById('category-sidebar-mobile-close');
+  if (catMobileCloseBtn) catMobileCloseBtn.addEventListener('click', closeSidebar);
   
   // Event handlers
   sidebar.querySelectorAll('input[data-filter="brand"]').forEach(function(cb) {
