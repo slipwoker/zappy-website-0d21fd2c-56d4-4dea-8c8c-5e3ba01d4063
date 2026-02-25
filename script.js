@@ -553,6 +553,10 @@ window.onload = function() {
 ;
 
 ;
+
+;
+
+;
 /* ==ZAPPY E-COMMERCE JS START== */
 // E-commerce functionality
 (function() {
@@ -719,7 +723,7 @@ function stripHtmlToText(html) {
   let viewToggleEnabled = true;
   let currentSortKey = 'default';
   let currentViewMode = localStorage.getItem('zappy_view_mode_' + websiteId) || 'grid';
-  let activeSidebarFilters = { categories: [], tags: [], priceMin: null, priceMax: null, sale: false };
+  let activeSidebarFilters = { categories: [], brands: [], tags: [], priceMin: null, priceMax: null, sale: false };
   
   // Fetch store settings (including tax rate and product layout) from API
   async function fetchStoreSettings() {
@@ -885,7 +889,7 @@ function stripHtmlToText(html) {
   
   // Store loaded products for filtering
   var productsCache = [];
-  var currentFilter = 'all';
+  var currentFilter = 'all'; // kept for legacy compat, not used with sidebar filters
   
   // Load products on products page (uses public storefront API)
   // This is called on page load - delegates to loadProductsWithFilter
@@ -998,27 +1002,18 @@ function stripHtmlToText(html) {
     if (!grid) grid = document.getElementById('zappy-product-grid');
     if (!grid) return;
     
-    // Step 1: Apply tab filter (all/featured/new/sale)
-    var productsToShow = productsCache;
-    if (currentFilter === 'featured') {
-      productsToShow = productsCache.filter(function(p) { return p.is_featured; });
-    } else if (currentFilter === 'sale') {
-      productsToShow = productsCache.filter(function(p) {
-        return p.sale_price && parseFloat(p.sale_price) < parseFloat(p.price);
-      });
-    } else if (currentFilter === 'new') {
-      productsToShow = productsCache.filter(function(p) {
-        return p.tags && p.tags.some(function(tag) {
-          return tag.toLowerCase() === 'new' || tag.toLowerCase() === 'חדש';
-        });
-      });
-    }
+    var productsToShow = productsCache.slice();
     
-    // Step 2: Apply sidebar filters
+    // Apply sidebar filters
     if (sidebarFiltersConfig.enabled) {
       if (activeSidebarFilters.categories.length > 0) {
         productsToShow = productsToShow.filter(function(p) {
           return activeSidebarFilters.categories.includes(p.category_id);
+        });
+      }
+      if (activeSidebarFilters.brands && activeSidebarFilters.brands.length > 0) {
+        productsToShow = productsToShow.filter(function(p) {
+          return p.brand && activeSidebarFilters.brands.includes(p.brand);
         });
       }
       if (activeSidebarFilters.tags.length > 0) {
@@ -1141,6 +1136,39 @@ function stripHtmlToText(html) {
     }
   }
   
+  function buildPriceRanges(prices) {
+    if (!prices || prices.length === 0) return [];
+    var minP = Math.min.apply(null, prices);
+    var maxP = Math.max.apply(null, prices);
+    if (minP === maxP) return [];
+    var range = maxP - minP;
+    var step;
+    if (range <= 50) step = 10;
+    else if (range <= 200) step = 25;
+    else if (range <= 500) step = 50;
+    else if (range <= 1000) step = 100;
+    else if (range <= 5000) step = 500;
+    else step = 1000;
+    var bucketStart = Math.floor(minP / step) * step;
+    var buckets = [];
+    while (bucketStart < maxP) {
+      var bucketEnd = bucketStart + step;
+      var count = prices.filter(function(p) { return p >= bucketStart && p < bucketEnd; }).length;
+      if (bucketStart + step >= maxP) {
+        count = prices.filter(function(p) { return p >= bucketStart; }).length;
+      }
+      if (count > 0) {
+        buckets.push({ min: bucketStart, max: bucketEnd, count: count });
+      }
+      bucketStart = bucketEnd;
+    }
+    return buckets;
+  }
+
+  function formatPrice(val) {
+    return val % 1 === 0 ? val.toString() : val.toFixed(2);
+  }
+
   // Build and initialize the sidebar filters
   function initSidebarFilters(sidebarId, toggleBtnId) {
     var sidebar = document.getElementById(sidebarId);
@@ -1148,9 +1176,14 @@ function stripHtmlToText(html) {
     
     var filters = sidebarFiltersConfig.filters || [];
     var html = '';
+    var currency = isRTL ? '₪' : '$';
     
-    // Close button (visible on mobile)
+    // Mobile close button (hidden on desktop, shown via CSS on mobile)
     html += '<button class="sidebar-close-btn" id="' + sidebarId + '-close" style="display:none;">&times;</button>';
+    
+    // Sidebar header with title and clear button
+    html += '<div class="sidebar-header"><span class="sidebar-title">' + (isRTL ? 'סינון' : 'Filters') + '</span>';
+    html += '<button class="sidebar-clear-btn" id="' + sidebarId + '-clear" title="' + (isRTL ? 'נקה הכל' : 'Clear all') + '">' + (isRTL ? 'נקה הכל' : 'Clear all') + '</button></div>';
     
     // Category filter
     if (filters.includes('category')) {
@@ -1166,6 +1199,25 @@ function stripHtmlToText(html) {
         html += '<div class="sidebar-section"><div class="sidebar-section-title">' + (isRTL ? 'קטגוריות' : 'Categories') + '</div>';
         catKeys.forEach(function(catId) {
           html += '<label class="sidebar-item"><input type="checkbox" data-filter="category" value="' + catId + '"> ' + categories[catId].name + ' <span class="count">(' + categories[catId].count + ')</span></label>';
+        });
+        html += '</div>';
+      }
+    }
+    
+    // Brand filter
+    if (filters.includes('brand')) {
+      var brandCounts = {};
+      productsCache.forEach(function(p) {
+        if (p.brand) {
+          brandCounts[p.brand] = (brandCounts[p.brand] || 0) + 1;
+        }
+      });
+      var brandKeys = Object.keys(brandCounts);
+      if (brandKeys.length > 0) {
+        brandKeys.sort();
+        html += '<div class="sidebar-section"><div class="sidebar-section-title">' + (isRTL ? 'מותג' : 'Brand') + '</div>';
+        brandKeys.forEach(function(brand) {
+          html += '<label class="sidebar-item"><input type="checkbox" data-filter="brand" value="' + brand + '"> ' + brand + ' <span class="count">(' + brandCounts[brand] + ')</span></label>';
         });
         html += '</div>';
       }
@@ -1192,19 +1244,16 @@ function stripHtmlToText(html) {
       }
     }
     
-    // Price range filter
+    // Price range filter (dynamic buckets)
     if (filters.includes('price')) {
       var prices = productsCache.map(function(p) { return parseFloat(p.price) || 0; }).filter(function(v) { return v > 0; });
-      if (prices.length > 0) {
-        var minPrice = Math.floor(Math.min.apply(null, prices));
-        var maxPrice = Math.ceil(Math.max.apply(null, prices));
+      var buckets = buildPriceRanges(prices);
+      if (buckets.length > 0) {
         html += '<div class="sidebar-section"><div class="sidebar-section-title">' + (isRTL ? 'טווח מחירים' : 'Price Range') + '</div>';
-        html += '<div class="price-range-inputs">';
-        html += '<input type="number" id="' + sidebarId + '-price-min" placeholder="' + (isRTL ? 'מינ' : 'Min') + '" min="' + minPrice + '" max="' + maxPrice + '" value="">';
-        html += '<span>—</span>';
-        html += '<input type="number" id="' + sidebarId + '-price-max" placeholder="' + (isRTL ? 'מקס' : 'Max') + '" min="' + minPrice + '" max="' + maxPrice + '" value="">';
-        html += '</div>';
-        html += '<button class="price-filter-btn" id="' + sidebarId + '-price-btn">' + (isRTL ? 'סנן' : 'Filter') + '</button>';
+        buckets.forEach(function(b, i) {
+          var label = currency + formatPrice(b.min) + ' – ' + currency + formatPrice(b.max);
+          html += '<label class="sidebar-item"><input type="radio" name="' + sidebarId + '-price-range" data-filter="price-range" data-min="' + b.min + '" data-max="' + b.max + '" value="' + i + '"> ' + label + ' <span class="count">(' + b.count + ')</span></label>';
+        });
         html += '</div>';
       }
     }
@@ -1218,9 +1267,6 @@ function stripHtmlToText(html) {
         html += '</div>';
       }
     }
-    
-    // Clear all link
-    html += '<span class="sidebar-clear" id="' + sidebarId + '-clear">' + (isRTL ? 'נקה סינון' : 'Clear all filters') + '</span>';
     
     sidebar.innerHTML = html;
     sidebar.style.display = '';
@@ -1241,9 +1287,7 @@ function stripHtmlToText(html) {
     }
     
     var closeBtn = document.getElementById(sidebarId + '-close');
-    if (closeBtn) {
-      closeBtn.style.display = '';
-    }
+    if (closeBtn) closeBtn.style.display = '';
     
     function closeSidebar() {
       sidebar.classList.remove('open');
@@ -1256,6 +1300,12 @@ function stripHtmlToText(html) {
     sidebar.querySelectorAll('input[data-filter="category"]').forEach(function(cb) {
       cb.addEventListener('change', function() {
         activeSidebarFilters.categories = Array.from(sidebar.querySelectorAll('input[data-filter="category"]:checked')).map(function(el) { return el.value; });
+        applyAllFiltersAndRender();
+      });
+    });
+    sidebar.querySelectorAll('input[data-filter="brand"]').forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        activeSidebarFilters.brands = Array.from(sidebar.querySelectorAll('input[data-filter="brand"]:checked')).map(function(el) { return el.value; });
         applyAllFiltersAndRender();
       });
     });
@@ -1272,28 +1322,22 @@ function stripHtmlToText(html) {
       });
     });
     
-    // Price filter button
-    var priceBtnEl = document.getElementById(sidebarId + '-price-btn');
-    if (priceBtnEl) {
-      priceBtnEl.addEventListener('click', function() {
-        var minInput = document.getElementById(sidebarId + '-price-min');
-        var maxInput = document.getElementById(sidebarId + '-price-max');
-        activeSidebarFilters.priceMin = minInput && minInput.value ? parseFloat(minInput.value) : null;
-        activeSidebarFilters.priceMax = maxInput && maxInput.value ? parseFloat(maxInput.value) : null;
+    // Price range radio handlers
+    sidebar.querySelectorAll('input[data-filter="price-range"]').forEach(function(radio) {
+      radio.addEventListener('change', function() {
+        activeSidebarFilters.priceMin = parseFloat(radio.getAttribute('data-min'));
+        activeSidebarFilters.priceMax = parseFloat(radio.getAttribute('data-max'));
         applyAllFiltersAndRender();
       });
-    }
+    });
     
     // Clear all
     var clearEl = document.getElementById(sidebarId + '-clear');
     if (clearEl) {
       clearEl.addEventListener('click', function() {
-        activeSidebarFilters = { categories: [], tags: [], priceMin: null, priceMax: null, sale: false };
+        activeSidebarFilters = { categories: [], brands: [], tags: [], priceMin: null, priceMax: null, sale: false };
         sidebar.querySelectorAll('input[type="checkbox"]').forEach(function(cb) { cb.checked = false; });
-        var minInput = document.getElementById(sidebarId + '-price-min');
-        var maxInput = document.getElementById(sidebarId + '-price-max');
-        if (minInput) minInput.value = '';
-        if (maxInput) maxInput.value = '';
+        sidebar.querySelectorAll('input[type="radio"]').forEach(function(rb) { rb.checked = false; });
         applyAllFiltersAndRender();
       });
     }
@@ -1438,17 +1482,8 @@ function stripHtmlToText(html) {
     }).join('');
   }
   
-  // Initialize filter buttons
   function initFilterButtons() {
-    document.querySelectorAll('.products-main .filter-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        currentFilter = btn.getAttribute('data-category') || 'all';
-        document.querySelectorAll('.products-main .filter-btn').forEach(function(b) {
-          b.classList.toggle('active', b.getAttribute('data-category') === currentFilter);
-        });
-        applyAllFiltersAndRender();
-      });
-    });
+    // Legacy filter buttons removed - sidebar filters handle all filtering
   }
   
   // Render cart drawer (slide-out panel)
@@ -4502,7 +4537,7 @@ let additionalJsSortingConfig = {};
 let additionalJsViewToggleEnabled = true;
 let catCurrentSortKey = 'default';
 let catCurrentViewMode = localStorage.getItem('zappy_view_mode_' + (window.ZAPPY_WEBSITE_ID || '')) || 'grid';
-let catActiveSidebarFilters = { categories: [], tags: [], priceMin: null, priceMax: null, sale: false };
+let catActiveSidebarFilters = { categories: [], brands: [], tags: [], priceMin: null, priceMax: null, sale: false };
 let catCurrentFilter = 'all';
 let catProductsCache = [];
 
@@ -5237,44 +5272,21 @@ function renderCategoryPage(container, category, t) {
   initCategoryToolbar(isRTL, t);
   
   applyCategoryFiltersAndRender(productGrid, t);
-  
-  // Setup filter buttons for category products
-  const filterBtns = container.querySelectorAll('.products-main .filter-btn');
-  filterBtns.forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      filterBtns.forEach(function(b) { b.classList.remove('active'); });
-      btn.classList.add('active');
-      catCurrentFilter = btn.getAttribute('data-category') || 'all';
-      applyCategoryFiltersAndRender(productGrid, t);
-    });
-  });
 }
 
 function applyCategoryFiltersAndRender(productGrid, t) {
   if (!productGrid) productGrid = document.getElementById('zappy-category-products');
   if (!productGrid) return;
   
-  var productsToShow = catProductsCache;
-  
-  if (catCurrentFilter === 'featured') {
-    productsToShow = catProductsCache.filter(function(p) { return p.is_featured; });
-  } else if (catCurrentFilter === 'new') {
-    productsToShow = catProductsCache.filter(function(p) {
-      return p.tags && p.tags.some(function(tag) {
-        return tag.toLowerCase() === 'new' || tag.toLowerCase() === 'חדש';
-      });
-    });
-  } else if (catCurrentFilter === 'sale') {
-    productsToShow = catProductsCache.filter(function(p) {
-      return (p.sale_price && parseFloat(p.sale_price) < parseFloat(p.price)) ||
-             (p.tags && p.tags.some(function(tag) {
-               return tag.toLowerCase() === 'sale' || tag.toLowerCase() === 'מבצע';
-             }));
-    });
-  }
+  var productsToShow = catProductsCache.slice();
   
   // Apply sidebar filters
   if (additionalJsSidebarFiltersConfig.enabled) {
+    if (catActiveSidebarFilters.brands && catActiveSidebarFilters.brands.length > 0) {
+      productsToShow = productsToShow.filter(function(p) {
+        return p.brand && catActiveSidebarFilters.brands.includes(p.brand);
+      });
+    }
     if (catActiveSidebarFilters.tags.length > 0) {
       productsToShow = productsToShow.filter(function(p) {
         return p.tags && p.tags.some(function(tag) { return catActiveSidebarFilters.tags.includes(tag); });
@@ -5385,14 +5397,69 @@ function initCategoryToolbar(isRTL, t) {
   }
 }
 
+function catBuildPriceRanges(prices) {
+  if (!prices || prices.length === 0) return [];
+  var minP = Math.min.apply(null, prices);
+  var maxP = Math.max.apply(null, prices);
+  if (minP === maxP) return [];
+  var range = maxP - minP;
+  var step;
+  if (range <= 50) step = 10;
+  else if (range <= 200) step = 25;
+  else if (range <= 500) step = 50;
+  else if (range <= 1000) step = 100;
+  else if (range <= 5000) step = 500;
+  else step = 1000;
+  var bucketStart = Math.floor(minP / step) * step;
+  var buckets = [];
+  while (bucketStart < maxP) {
+    var bucketEnd = bucketStart + step;
+    var count = prices.filter(function(p) { return p >= bucketStart && p < bucketEnd; }).length;
+    if (bucketStart + step >= maxP) {
+      count = prices.filter(function(p) { return p >= bucketStart; }).length;
+    }
+    if (count > 0) {
+      buckets.push({ min: bucketStart, max: bucketEnd, count: count });
+    }
+    bucketStart = bucketEnd;
+  }
+  return buckets;
+}
+
+function catFormatPrice(val) {
+  return val % 1 === 0 ? val.toString() : val.toFixed(2);
+}
+
 function initCategorySidebarFilters(isRTL, t) {
   var sidebar = document.getElementById('category-sidebar');
   if (!sidebar) return;
   
   var filters = (additionalJsSidebarFiltersConfig.filters || []).filter(function(f) { return f !== 'category'; });
   if (filters.length === 0) return;
+  var currency = isRTL ? '₪' : '$';
   
   var html = '<button class="sidebar-close-btn" id="category-sidebar-close" style="display:none;">&times;</button>';
+  
+  // Sidebar header with title and clear button
+  html += '<div class="sidebar-header"><span class="sidebar-title">' + (isRTL ? 'סינון' : 'Filters') + '</span>';
+  html += '<button class="sidebar-clear-btn" id="category-sidebar-clear" title="' + (isRTL ? 'נקה הכל' : 'Clear all') + '">' + (isRTL ? 'נקה הכל' : 'Clear all') + '</button></div>';
+  
+  // Brand filter
+  if (filters.includes('brand')) {
+    var brandCounts = {};
+    catProductsCache.forEach(function(p) {
+      if (p.brand) { brandCounts[p.brand] = (brandCounts[p.brand] || 0) + 1; }
+    });
+    var brandKeys = Object.keys(brandCounts);
+    if (brandKeys.length > 0) {
+      brandKeys.sort();
+      html += '<div class="sidebar-section"><div class="sidebar-section-title">' + (isRTL ? 'מותג' : 'Brand') + '</div>';
+      brandKeys.forEach(function(brand) {
+        html += '<label class="sidebar-item"><input type="checkbox" data-filter="brand" value="' + brand + '"> ' + brand + ' <span class="count">(' + brandCounts[brand] + ')</span></label>';
+      });
+      html += '</div>';
+    }
+  }
   
   // Tags filter
   if (filters.includes('tags')) {
@@ -5413,17 +5480,16 @@ function initCategorySidebarFilters(isRTL, t) {
     }
   }
   
-  // Price range filter
+  // Price range filter (dynamic buckets)
   if (filters.includes('price')) {
     var prices = catProductsCache.map(function(p) { return parseFloat(p.price) || 0; }).filter(function(v) { return v > 0; });
-    if (prices.length > 0) {
+    var buckets = catBuildPriceRanges(prices);
+    if (buckets.length > 0) {
       html += '<div class="sidebar-section"><div class="sidebar-section-title">' + (isRTL ? 'טווח מחירים' : 'Price Range') + '</div>';
-      html += '<div class="price-range-inputs">';
-      html += '<input type="number" id="cat-sidebar-price-min" placeholder="' + (isRTL ? 'מינ' : 'Min') + '">';
-      html += '<span>—</span>';
-      html += '<input type="number" id="cat-sidebar-price-max" placeholder="' + (isRTL ? 'מקס' : 'Max') + '">';
-      html += '</div>';
-      html += '<button class="price-filter-btn" id="cat-sidebar-price-btn">' + (isRTL ? 'סנן' : 'Filter') + '</button>';
+      buckets.forEach(function(b, i) {
+        var label = currency + catFormatPrice(b.min) + ' – ' + currency + catFormatPrice(b.max);
+        html += '<label class="sidebar-item"><input type="radio" name="cat-sidebar-price-range" data-filter="price-range" data-min="' + b.min + '" data-max="' + b.max + '" value="' + i + '"> ' + label + ' <span class="count">(' + b.count + ')</span></label>';
+      });
       html += '</div>';
     }
   }
@@ -5437,8 +5503,6 @@ function initCategorySidebarFilters(isRTL, t) {
       html += '</div>';
     }
   }
-  
-  html += '<span class="sidebar-clear" id="category-sidebar-clear">' + (isRTL ? 'נקה סינון' : 'Clear all filters') + '</span>';
   
   sidebar.innerHTML = html;
   sidebar.style.display = '';
@@ -5469,6 +5533,12 @@ function initCategorySidebarFilters(isRTL, t) {
   overlay.addEventListener('click', closeSidebar);
   
   // Event handlers
+  sidebar.querySelectorAll('input[data-filter="brand"]').forEach(function(cb) {
+    cb.addEventListener('change', function() {
+      catActiveSidebarFilters.brands = Array.from(sidebar.querySelectorAll('input[data-filter="brand"]:checked')).map(function(el) { return el.value; });
+      applyCategoryFiltersAndRender(null, t);
+    });
+  });
   sidebar.querySelectorAll('input[data-filter="tag"]').forEach(function(cb) {
     cb.addEventListener('change', function() {
       catActiveSidebarFilters.tags = Array.from(sidebar.querySelectorAll('input[data-filter="tag"]:checked')).map(function(el) { return el.value; });
@@ -5482,26 +5552,21 @@ function initCategorySidebarFilters(isRTL, t) {
     });
   });
   
-  var priceBtnEl = document.getElementById('cat-sidebar-price-btn');
-  if (priceBtnEl) {
-    priceBtnEl.addEventListener('click', function() {
-      var minInput = document.getElementById('cat-sidebar-price-min');
-      var maxInput = document.getElementById('cat-sidebar-price-max');
-      catActiveSidebarFilters.priceMin = minInput && minInput.value ? parseFloat(minInput.value) : null;
-      catActiveSidebarFilters.priceMax = maxInput && maxInput.value ? parseFloat(maxInput.value) : null;
+  // Price range radio handlers
+  sidebar.querySelectorAll('input[data-filter="price-range"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+      catActiveSidebarFilters.priceMin = parseFloat(radio.getAttribute('data-min'));
+      catActiveSidebarFilters.priceMax = parseFloat(radio.getAttribute('data-max'));
       applyCategoryFiltersAndRender(null, t);
     });
-  }
+  });
   
   var clearEl = document.getElementById('category-sidebar-clear');
   if (clearEl) {
     clearEl.addEventListener('click', function() {
-      catActiveSidebarFilters = { categories: [], tags: [], priceMin: null, priceMax: null, sale: false };
+      catActiveSidebarFilters = { categories: [], brands: [], tags: [], priceMin: null, priceMax: null, sale: false };
       sidebar.querySelectorAll('input[type="checkbox"]').forEach(function(cb) { cb.checked = false; });
-      var minInput = document.getElementById('cat-sidebar-price-min');
-      var maxInput = document.getElementById('cat-sidebar-price-max');
-      if (minInput) minInput.value = '';
-      if (maxInput) maxInput.value = '';
+      sidebar.querySelectorAll('input[type="radio"]').forEach(function(rb) { rb.checked = false; });
       applyCategoryFiltersAndRender(null, t);
     });
   }
