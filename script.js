@@ -595,6 +595,8 @@ window.onload = function() {
 ;
 
 ;
+
+;
 /* ==ZAPPY E-COMMERCE JS START== */
 // E-commerce functionality
 (function() {
@@ -1021,14 +1023,15 @@ function stripHtmlToText(html) {
       
       // Store all products for client-side filtering
       productsCache = data.data;
-      
+
       // Initialize toolbar, sidebar, sorting, and view toggle on first load
       if (!window._zappyToolbarInitialized) {
         window._zappyToolbarInitialized = true;
         initProductsToolbar('products-toolbar', 'product-sidebar', 'sort-select', 'sort-control', 'view-toggle', 'sidebar-toggle-btn', 'products-count');
       }
-      
+
       applyAllFiltersAndRender(grid);
+      if (typeof _syncCardFavorites === 'function') _syncCardFavorites();
     } catch (e) {
       console.error('Failed to load products', e);
       grid.innerHTML = '<div class="empty-cart">' + t.errorLoading + '</div>';
@@ -1481,6 +1484,8 @@ function stripHtmlToText(html) {
       var pricePerUnitHtml = getPricePerUnitHtml(p);
       var priceHtml = showPrice ? '<div class="price">' + displayPrice + '</div>' + pricePerUnitHtml : '';
       
+      var favBtnHtml = '<button class="card-favorite-btn" data-product-id="' + p.id + '" onclick="event.preventDefault(); event.stopPropagation(); toggleCardFavorite(this, \'' + p.id + '\')" title="שמור למועדפים"><svg class="heart-outline" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M14.7917 0.833C12.705 0.833 10.811 2.376 10 4.462C9.189 2.375 7.295 0.833 5.208 0.833C2.337 0.833 0 3.17 0 6.042C0 11.675 8.128 17.767 9.758 18.93L10 19.104L10.243 18.93C11.873 17.767 20 11.674 20 6.042C20 3.17 17.663 0.833 14.792 0.833ZM10 18.078C5.716 14.965 0.833 10.019 0.833 6.042C0.833 3.629 2.796 1.667 5.208 1.667C7.498 1.667 9.583 4.05 9.583 6.667H10.417C10.417 4.05 12.502 1.667 14.792 1.667C17.204 1.667 19.167 3.629 19.167 6.042C19.167 10.019 14.284 14.965 10 18.078Z" fill="currentColor"/></svg><svg class="heart-filled" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20"><path d="M14.7917 0.833C12.705 0.833 10.811 2.376 10 4.462C9.189 2.375 7.295 0.833 5.208 0.833C2.337 0.833 0 3.17 0 6.042C0 11.675 8.128 17.767 9.758 18.93L10 19.104L10.243 18.93C11.873 17.767 20 11.674 20 6.042C20 3.17 17.663 0.833 14.792 0.833Z" fill="#e74c3c"/></svg></button>';
+
       if (productLayout === 'compact') {
         cardContent = tagsHtml +
           '<a href="/product/' + (p.slug || p.id) + '" class="product-card-link">' +
@@ -1489,7 +1494,8 @@ function stripHtmlToText(html) {
               '<h3>' + p.name + '</h3>' +
               priceHtml +
             '</div>' +
-          '</a>';
+          '</a>' +
+          favBtnHtml;
       } else if (productLayout === 'detailed') {
         var detailedDesc = stripHtmlToText(p.description || '');
         var actionButton = isCatalogMode
@@ -1504,7 +1510,8 @@ function stripHtmlToText(html) {
               priceHtml +
             '</div>' +
           '</a>' +
-          actionButton;
+          actionButton +
+          favBtnHtml;
       } else {
         var standardDesc = stripHtmlToText(p.description || '');
         cardContent = tagsHtml +
@@ -1515,7 +1522,8 @@ function stripHtmlToText(html) {
               '<p>' + standardDesc + '</p>' +
               priceHtml +
             '</div>' +
-          '</a>';
+          '</a>' +
+          favBtnHtml;
       }
       
       return '<div class="product-card ' + productLayout + '" data-product-id="' + p.id + '">' + cardContent + '</div>';
@@ -4931,6 +4939,8 @@ function renderProductGrid(grid, products, t, isFeaturedSection, viewMode) {
     var pricePerUnitHtml = getPricePerUnitHtml(p);
     var priceHtml = showPrice ? '<div class="price">' + displayPrice + '</div>' + pricePerUnitHtml : '';
     
+    var favBtnHtml = '<button class="card-favorite-btn" data-product-id="' + p.id + '" onclick="event.preventDefault(); event.stopPropagation(); toggleCardFavorite(this, \'' + p.id + '\')" title="שמור למועדפים"><svg class="heart-outline" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M14.7917 0.833C12.705 0.833 10.811 2.376 10 4.462C9.189 2.375 7.295 0.833 5.208 0.833C2.337 0.833 0 3.17 0 6.042C0 11.675 8.128 17.767 9.758 18.93L10 19.104L10.243 18.93C11.873 17.767 20 11.674 20 6.042C20 3.17 17.663 0.833 14.792 0.833ZM10 18.078C5.716 14.965 0.833 10.019 0.833 6.042C0.833 3.629 2.796 1.667 5.208 1.667C7.498 1.667 9.583 4.05 9.583 6.667H10.417C10.417 4.05 12.502 1.667 14.792 1.667C17.204 1.667 19.167 3.629 19.167 6.042C19.167 10.019 14.284 14.965 10 18.078Z" fill="currentColor"/></svg><svg class="heart-filled" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20"><path d="M14.7917 0.833C12.705 0.833 10.811 2.376 10 4.462C9.189 2.375 7.295 0.833 5.208 0.833C2.337 0.833 0 3.17 0 6.042C0 11.675 8.128 17.767 9.758 18.93L10 19.104L10.243 18.93C11.873 17.767 20 11.674 20 6.042C20 3.17 17.663 0.833 14.792 0.833Z" fill="#e74c3c"/></svg></button>';
+
     if (layout === 'compact') {
       cardContent = tagsHtml +
         '<a href="/product/' + (p.slug || p.id) + '" class="product-card-link">' +
@@ -4939,7 +4949,8 @@ function renderProductGrid(grid, products, t, isFeaturedSection, viewMode) {
             '<h3>' + p.name + '</h3>' +
             priceHtml +
           '</div>' +
-        '</a>';
+        '</a>' +
+        favBtnHtml;
     } else if (layout === 'detailed') {
       var detailedDesc = stripHtmlToText(p.description || '');
       var actionButton = isCatalogMode
@@ -4954,7 +4965,8 @@ function renderProductGrid(grid, products, t, isFeaturedSection, viewMode) {
             priceHtml +
           '</div>' +
         '</a>' +
-        actionButton;
+        actionButton +
+        favBtnHtml;
     } else {
       var standardDesc = stripHtmlToText(p.description || '');
       cardContent = tagsHtml +
@@ -4965,7 +4977,8 @@ function renderProductGrid(grid, products, t, isFeaturedSection, viewMode) {
             '<p>' + standardDesc + '</p>' +
             priceHtml +
           '</div>' +
-        '</a>';
+        '</a>' +
+        favBtnHtml;
     }
     
     return '<div class="product-card ' + layout + '" data-product-id="' + p.id + '">' + cardContent + '</div>';
@@ -5311,8 +5324,9 @@ function renderCategoryPage(container, category, t) {
   
   // Initialize category toolbar
   initCategoryToolbar(isRTL, t);
-  
+
   applyCategoryFiltersAndRender(productGrid, t);
+  if (typeof _syncCardFavorites === 'function') _syncCardFavorites();
 }
 
 function applyCategoryFiltersAndRender(productGrid, t) {
@@ -5999,6 +6013,76 @@ function toggleFavorite(productId) {
   }
 }
 
+function toggleCardFavorite(btn, productId) {
+  var wId = window.ZAPPY_WEBSITE_ID;
+  var tokenKey = 'zappy_customer_token_' + wId;
+  var token = localStorage.getItem(tokenKey);
+
+  if (!token) {
+    _zappyProductToast('יש להתחבר כדי לשמור מועדפים');
+    var loginUrl = '/login';
+    var currentUrl = window.location.href;
+    if (currentUrl.includes('/api/website/preview')) {
+      var isFullscreen = currentUrl.includes('preview-fullscreen');
+      var previewType = isFullscreen ? 'preview-fullscreen' : 'preview';
+      loginUrl = '/api/website/' + previewType + '/' + wId + '?page=' + encodeURIComponent('/login');
+    }
+    setTimeout(function() { window.location.href = loginUrl; }, 1200);
+    return;
+  }
+
+  var isActive = btn.classList.contains('active');
+  var apiBase = window.ZAPPY_API_BASE || '';
+
+  if (isActive) {
+    btn.classList.remove('active');
+    fetch(apiBase + '/api/ecommerce/customers/me/favorites/' + productId + '?websiteId=' + wId, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token }
+    }).then(function(r) {
+      if (r.ok) {
+        _zappyProductToast('הוסר מהמועדפים');
+        document.querySelectorAll('.card-favorite-btn[data-product-id="' + productId + '"]').forEach(function(b) { b.classList.remove('active'); });
+        var detailBtn = document.getElementById('favorite-btn');
+        if (detailBtn) detailBtn.classList.remove('active');
+      }
+    }).catch(function() { btn.classList.add('active'); });
+  } else {
+    btn.classList.add('active');
+    fetch(apiBase + '/api/ecommerce/customers/me/favorites', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ websiteId: wId, productId: productId })
+    }).then(function(r) {
+      if (r.ok) {
+        _zappyProductToast('נוסף למועדפים');
+        document.querySelectorAll('.card-favorite-btn[data-product-id="' + productId + '"]').forEach(function(b) { b.classList.add('active'); });
+        var detailBtn = document.getElementById('favorite-btn');
+        if (detailBtn) detailBtn.classList.add('active');
+      }
+    }).catch(function() { btn.classList.remove('active'); });
+  }
+}
+
+function _syncCardFavorites() {
+  var wId = window.ZAPPY_WEBSITE_ID;
+  var tokenKey = 'zappy_customer_token_' + wId;
+  var token = localStorage.getItem(tokenKey);
+  if (!token) return;
+  var apiBase = window.ZAPPY_API_BASE || '';
+  fetch(apiBase + '/api/ecommerce/customers/me/favorites?websiteId=' + wId, {
+    headers: { 'Authorization': 'Bearer ' + token }
+  }).then(function(r) { return r.json(); })
+    .then(function(data) {
+      var favIds = (data.favorites || data || []).map(function(f) { return f.product_id || f.productId || f.id; });
+      document.querySelectorAll('.card-favorite-btn').forEach(function(btn) {
+        var pid = btn.getAttribute('data-product-id');
+        if (favIds.indexOf(pid) !== -1) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+    }).catch(function() {});
+}
+
 function shareProduct() {
   var url = window.location.href;
   if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -6647,8 +6731,31 @@ async function loadRelatedProducts(currentProduct, t) {
       } catch (e) {}
     }
 
+    function ensureLightboxCss(){
+      try {
+        var head = document.head || document.querySelector('head');
+        if (!head || head.querySelector('style[data-zappy-image-lightbox="true"]')) return;
+        var s = document.createElement('style');
+        s.setAttribute('data-zappy-image-lightbox','true');
+        s.textContent =
+          '.zappy-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:9999;padding:24px;}'+
+          '.zappy-lightbox-content{position:relative;max-width:min(1100px,92vw);max-height:92vh;}'+
+          '.zappy-lightbox-content img{max-width:92vw;max-height:92vh;display:block;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.45);}'+
+          '.zappy-lightbox-close{position:absolute;top:-14px;right:-14px;width:32px;height:32px;border-radius:999px;background:#fff;color:#111;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 8px 24px rgba(0,0,0,.25);cursor:pointer;}'+
+          '.zappy-lightbox-backdrop{position:absolute;inset:0;display:block;cursor:pointer;}'+
+          'input.zappy-lightbox-toggle{position:absolute;opacity:0;pointer-events:none;}'+
+          'label.zappy-lightbox-trigger{display:contents;}'+
+          'label.zappy-lightbox-trigger{cursor:zoom-in;}'+
+          'label.zappy-lightbox-trigger [data-zappy-zoom-wrapper="true"],'+
+          'label.zappy-lightbox-trigger img{cursor:zoom-in !important;}'+
+          'input.zappy-lightbox-toggle:checked + label.zappy-lightbox-trigger + .zappy-lightbox{display:flex;}';
+        head.appendChild(s);
+      } catch(e){}
+    }
+
     function initZappyPublishedLightboxes(){
       try {
+        ensureLightboxCss();
         // Repair orphaned labels (label has for=toggleId but input is missing)
         var orphanLabels = document.querySelectorAll('label.zappy-lightbox-trigger[for^="zappy-lightbox-toggle-"]');
         for (var i=0;i<orphanLabels.length;i++){

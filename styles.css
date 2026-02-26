@@ -5544,6 +5544,12 @@ body.accessibility-widget-visible ._access-menu {
 
 
 
+
+
+
+
+
+
 /* ==ZAPPY V2 E-COMMERCE THEME CSS== */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /* V2 E-COMMERCE CSS - Clean V2 Variables Only                                  */
@@ -5718,6 +5724,14 @@ main.page-container.ecommerce-page,
 .product-card .add-to-cart:hover {
   filter: brightness(0.9);
 }
+.product-card { position: relative; }
+.card-favorite-btn { position: absolute; bottom: 10px; inset-inline-end: 10px; z-index: 5; background: rgba(255,255,255,0.85); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; color: var(--text-secondary, #6b7280); transition: all 0.2s ease; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+.card-favorite-btn:hover { background: #fff; color: var(--primary, #e74c3c); transform: scale(1.1); box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+.card-favorite-btn .heart-filled { display: none; }
+.card-favorite-btn.active .heart-outline { display: none; }
+.card-favorite-btn.active .heart-filled { display: block; }
+.card-favorite-btn.active { color: #e74c3c; background: #fff; }
+.card-favorite-btn svg { width: 18px; height: 18px; }
 .product-card a.view-details-btn {
   display: block;
   text-align: center;
@@ -5853,6 +5867,7 @@ main.page-container.ecommerce-page,
 .product-grid.view-list .product-card .product-tags { position: absolute; top: 8px; inset-inline-start: 8px; display: flex; flex-wrap: wrap; gap: 3px; max-width: 150px; z-index: 2; }
 .product-grid.view-list .product-card .product-tags .tag-badge { font-size: 9px; padding: 1px 5px; line-height: 1.4; border-radius: 3px; }
 .product-grid.view-list .product-card .add-to-cart { position: absolute; bottom: 16px; inset-inline-end: 16px; width: auto; margin: 0; padding: 8px 20px; font-size: 13px; }
+.product-grid.view-list .card-favorite-btn { bottom: 16px; inset-inline-end: auto; inset-inline-start: 10px; }
 
 @media (max-width: 768px) {
   .products-layout { flex-direction: column; }
@@ -5890,6 +5905,9 @@ main.page-container.ecommerce-page,
   .product-grid.view-list .product-card p { font-size: 11px !important; -webkit-line-clamp: 1 !important; margin: 0 0 2px 0; height: auto !important; }
   .product-grid.view-list .product-card .price { font-size: 13px; margin-top: auto; padding-top: 2px; }
   .product-grid.view-list .product-card .add-to-cart { flex: 0 0 auto; position: static; padding: 6px 12px; font-size: 11px; margin: 0; white-space: nowrap; align-self: flex-end; }
+  .card-favorite-btn { width: 28px; height: 28px; bottom: 6px; inset-inline-end: 6px; }
+  .card-favorite-btn svg { width: 14px; height: 14px; }
+  .product-grid.view-list .card-favorite-btn { position: static; flex: 0 0 auto; align-self: flex-start; inset-inline-start: auto; }
 }
 
 /* Cart */
@@ -9252,9 +9270,10 @@ nav.navbar .menu-item-has-children::after,
   position: relative !important;
 }
 
-/* Prevent inserted elements from exceeding their container width */
+/* Prevent inserted elements from exceeding their container width.
+   max-width uses no !important so inline styles can set a specific constraint. */
 .zappy-inserted-element {
-  max-width: 100% !important;
+  max-width: 100%;
   box-sizing: border-box !important;
 }
 
