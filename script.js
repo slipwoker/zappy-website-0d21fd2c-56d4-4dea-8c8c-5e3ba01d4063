@@ -605,6 +605,8 @@ window.onload = function() {
 ;
 
 ;
+
+;
 /* ==ZAPPY E-COMMERCE JS START== */
 // E-commerce functionality
 (function() {
@@ -5018,19 +5020,34 @@ async function loadCatalogCategories() {
       }
     });
 
+    // Flatten descendants so grandchildren+ appear under their top-level ancestor
+    function collectDescendants(parentId) {
+      var result = [];
+      var direct = childrenMap[parentId] || [];
+      direct.forEach(function(child) {
+        result.push(child);
+        result = result.concat(collectDescendants(child.id));
+      });
+      return result;
+    }
+    topLevel.forEach(function(cat) {
+      childrenMap[cat.id] = collectDescendants(cat.id);
+    });
+
     function catUrl(cat) { return '/category/' + (cat.slug || cat.id); }
     var chevronSvg = '<svg class="catalog-menu-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
 
-    // Build HTML for the main nav dropdown (ul > li structure)
+    // Build HTML for the main nav dropdown (flat list with parent/child classes)
     var dropdownItemsHtml = topLevel.map(function(cat) {
       var children = childrenMap[cat.id] || [];
       if (children.length === 0) {
         return '<li data-category-id="' + cat.id + '" data-category-slug="' + (cat.slug || '') + '"><a href="' + catUrl(cat) + '">' + cat.name + '</a></li>';
       }
-      var subItems = children.map(function(child) {
-        return '<li data-category-id="' + child.id + '" data-category-slug="' + (child.slug || '') + '"><a href="' + catUrl(child) + '">' + child.name + '</a></li>';
-      }).join('');
-      return '<li class="menu-item-has-children" data-category-id="' + cat.id + '" data-category-slug="' + (cat.slug || '') + '"><a href="' + catUrl(cat) + '">' + cat.name + '</a><ul class="sub-menu">' + subItems + '</ul></li>';
+      var items = '<li class="zappy-nav-parent" data-category-id="' + cat.id + '" data-category-slug="' + (cat.slug || '') + '"><a href="' + catUrl(cat) + '">' + cat.name + '</a></li>';
+      children.forEach(function(child) {
+        items += '<li class="zappy-nav-child" data-category-id="' + child.id + '" data-category-slug="' + (child.slug || '') + '"><a href="' + catUrl(child) + '">' + child.name + '</a></li>';
+      });
+      return items;
     }).join('');
 
     // Build HTML for the secondary catalog bar (flat links / dropdowns)
