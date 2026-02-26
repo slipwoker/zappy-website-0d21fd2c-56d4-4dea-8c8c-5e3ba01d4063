@@ -601,6 +601,8 @@ window.onload = function() {
 ;
 
 ;
+
+;
 /* ==ZAPPY E-COMMERCE JS START== */
 // E-commerce functionality
 (function() {
@@ -4989,32 +4991,62 @@ function renderProductGrid(grid, products, t, isFeaturedSection, viewMode) {
   }).join('');
 }
 
-// Load categories into catalog dropdown
+// Load categories into catalog dropdown, respecting parent/child hierarchy
 async function loadCatalogCategories() {
     const list = document.getElementById('zappy-category-links');
     const navList = document.getElementById('zappy-nav-category-links');
     if (!list && !navList) return;
-  const websiteId = window.ZAPPY_WEBSITE_ID;
+  var websiteId = window.ZAPPY_WEBSITE_ID;
   if (!websiteId) return;
   
   try {
-    const res = await fetch(buildApiUrlWithLang('/api/ecommerce/storefront/categories?websiteId=' + websiteId));
-    const data = await res.json();
+    var res = await fetch(buildApiUrlWithLang('/api/ecommerce/storefront/categories?websiteId=' + websiteId));
+    var data = await res.json();
     if (!data.success || !data.data?.length) return;
-    
-    // Use SEO-friendly slug URLs for categories, fallback to id for backward compatibility
-    const dropdownItemsHtml = data.data.map(cat => {
-      const categoryUrl = '/category/' + (cat.slug || cat.id);
-      return '<li data-category-id="' + cat.id + '" data-category-slug="' + (cat.slug || '') + '"><a href="' + categoryUrl + '">' + cat.name + '</a></li>';
+
+    var allCats = data.data;
+    var childrenMap = {};
+    var topLevel = [];
+    allCats.forEach(function(cat) {
+      if (cat.parent_id) {
+        if (!childrenMap[cat.parent_id]) childrenMap[cat.parent_id] = [];
+        childrenMap[cat.parent_id].push(cat);
+      } else {
+        topLevel.push(cat);
+      }
+    });
+
+    function catUrl(cat) { return '/category/' + (cat.slug || cat.id); }
+    var chevronSvg = '<svg class="catalog-menu-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+
+    // Build HTML for the main nav dropdown (ul > li structure)
+    var dropdownItemsHtml = topLevel.map(function(cat) {
+      var children = childrenMap[cat.id] || [];
+      if (children.length === 0) {
+        return '<li data-category-id="' + cat.id + '" data-category-slug="' + (cat.slug || '') + '"><a href="' + catUrl(cat) + '">' + cat.name + '</a></li>';
+      }
+      var subItems = children.map(function(child) {
+        return '<li data-category-id="' + child.id + '" data-category-slug="' + (child.slug || '') + '"><a href="' + catUrl(child) + '">' + child.name + '</a></li>';
+      }).join('');
+      return '<li class="menu-item-has-children" data-category-id="' + cat.id + '" data-category-slug="' + (cat.slug || '') + '"><a href="' + catUrl(cat) + '">' + cat.name + '</a><ul class="sub-menu">' + subItems + '</ul></li>';
     }).join('');
 
-    const barItemsHtml = data.data.map(cat => {
-      const categoryUrl = '/category/' + (cat.slug || cat.id);
-      return '<a href="' + categoryUrl + '" class="catalog-menu-item" data-category-id="' + cat.id + '" data-category-slug="' + (cat.slug || '') + '">' + cat.name + '</a>';
+    // Build HTML for the secondary catalog bar (flat links / dropdowns)
+    var barItemsHtml = topLevel.map(function(cat) {
+      var children = childrenMap[cat.id] || [];
+      if (children.length === 0) {
+        return '<a href="' + catUrl(cat) + '" class="catalog-menu-item" data-category-id="' + cat.id + '" data-category-slug="' + (cat.slug || '') + '">' + cat.name + '</a>';
+      }
+      var subLinks = children.map(function(child) {
+        return '<a href="' + catUrl(child) + '" class="catalog-menu-item" data-category-id="' + child.id + '" data-category-slug="' + (child.slug || '') + '">' + child.name + '</a>';
+      }).join('');
+      return '<div class="catalog-menu-parent" data-category-id="' + cat.id + '" data-category-slug="' + (cat.slug || '') + '">' +
+        '<a href="' + catUrl(cat) + '" class="catalog-menu-item catalog-menu-trigger">' + cat.name + ' ' + chevronSvg + '</a>' +
+        '<div class="sub-menu">' + subLinks + '</div>' +
+      '</div>';
     }).join('');
 
     if (navList) {
-      // Remove any previously injected category items
       navList.querySelectorAll('li[data-category-id]').forEach(function(node) { node.remove(); });
       navList.insertAdjacentHTML('beforeend', dropdownItemsHtml);
     }
