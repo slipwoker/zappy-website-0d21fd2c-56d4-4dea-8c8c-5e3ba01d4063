@@ -5592,6 +5592,12 @@ body.accessibility-widget-visible ._access-menu {
 
 
 
+
+
+
+
+
+
 /* ==ZAPPY V2 E-COMMERCE THEME CSS== */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /* V2 E-COMMERCE CSS - Clean V2 Variables Only                                  */
@@ -8784,7 +8790,7 @@ main,
   .navbar .sub-menu li a,
   nav.navbar .sub-menu li a,
   .zappy-products-dropdown .sub-menu a {
-    color: var(--nav-text, var(--text-light, #ffffff)) !important;
+    color: var(--nav-text, var(--text-dark)) !important;
     padding: 10px 16px !important;
     border-radius: 0 !important;
   }
@@ -8792,7 +8798,7 @@ main,
   nav.navbar .sub-menu li a:hover,
   .zappy-products-dropdown .sub-menu a:hover {
     background: transparent !important;
-    color: var(--nav-text, var(--text-light, #ffffff)) !important;
+    color: var(--nav-text, var(--text-dark)) !important;
   }
 
   /* Mobile submenu toggle arrow: pinned to first row top, visible on dark nav panel */
@@ -8813,7 +8819,7 @@ main,
     padding: 0 !important;
     margin: 0 !important;
     z-index: 2 !important;
-    color: var(--nav-text, var(--text-light, #ffffff)) !important;
+    color: var(--nav-text, var(--text-dark)) !important;
   }
   .mobile-submenu-toggle::after {
     content: '' !important;
