@@ -5610,6 +5610,12 @@ body.accessibility-widget-visible ._access-menu {
 
 
 
+
+
+
+
+
+
 /* ==ZAPPY V2 E-COMMERCE THEME CSS== */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /* V2 E-COMMERCE CSS - Clean V2 Variables Only                                  */
@@ -8814,6 +8820,8 @@ main,
   }
 
   /* Mobile submenu toggle arrow: vertically centered with nav-link text (15px padding + ~27px line-height) */
+  .navbar .nav-menu .mobile-submenu-toggle,
+  .navbar .mobile-submenu-toggle,
   .mobile-submenu-toggle {
     display: flex !important;
     align-items: center !important;
