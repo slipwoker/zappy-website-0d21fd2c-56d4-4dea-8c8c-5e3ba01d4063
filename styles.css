@@ -5598,6 +5598,12 @@ body.accessibility-widget-visible ._access-menu {
 
 
 
+
+
+
+
+
+
 /* ==ZAPPY V2 E-COMMERCE THEME CSS== */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /* V2 E-COMMERCE CSS - Clean V2 Variables Only                                  */
@@ -8801,7 +8807,7 @@ main,
     color: var(--nav-text, var(--text-dark)) !important;
   }
 
-  /* Mobile submenu toggle arrow: pinned to first row top, visible on dark nav panel */
+  /* Mobile submenu toggle arrow: vertically centered with nav-link text (15px padding + ~27px line-height) */
   .mobile-submenu-toggle {
     display: flex !important;
     align-items: center !important;
@@ -8809,7 +8815,7 @@ main,
     width: 44px !important;
     height: 44px !important;
     position: absolute !important;
-    top: 0 !important;
+    top: 7px !important;
     transform: none !important;
     left: 0 !important;
     right: auto !important;
