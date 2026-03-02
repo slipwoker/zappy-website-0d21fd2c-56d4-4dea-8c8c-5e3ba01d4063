@@ -5634,6 +5634,12 @@ body.accessibility-widget-visible ._access-menu {
 
 
 
+
+
+
+
+
+
 /* ==ZAPPY V2 E-COMMERCE THEME CSS== */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /* V2 E-COMMERCE CSS - Clean V2 Variables Only                                  */
@@ -8887,7 +8893,7 @@ main,
 /* ─────────────────────────────────────────────────────────────────────────────
    HOMEPAGE: FEATURED SECTIONS (PRODUCTS + CATEGORIES)
    These used to be styled by V1 base CSS; must live in V2 generateCss()
-   Background uses hero-divider-aware theme: --bg-light (LIGHT)
+   Background uses hero-divider-aware theme: var(--bg-light) (LIGHT)
    ───────────────────────────────────────────────────────────────────────────── */
 
 /* Featured Products Section (Home Page) */
